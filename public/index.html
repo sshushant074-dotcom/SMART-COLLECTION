@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Collection - Premium Clothing Hub, Jalalpur</title>
+  <meta name="description" content="Discover premium ready-made clothing for men, girls, and children at Smart Collection in Saran Jalalpur, Bihar. Try our interactive AI stylist and visual virtual try-on.">
+  
+  <!-- Global Error Handler for Sandbox Debugging -->
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      alert("⚠️ Client-Side JS Error:\n" + message + "\n\nFile: " + source + "\nLine: " + lineno + ":" + colno);
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      alert("⚠️ Client-Side Promise Rejection:\n" + event.reason);
+    });
+  </script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- PWA Manifest & Meta Tags -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Smart Collection">
+  <link rel="apple-touch-icon" href="images/pwa_icon_512.png">
+  
+  <!-- HTML2PDF CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="light-theme">
+  <!-- Announcement Bar -->
+  <div class="announcement-bar" id="announcementBar">
+    <span>✨ Grand Opening in Saran, Jalalpur (841412)! Visit us or shop online. WhatsApp support: <strong>+91 7827782899</strong> ✨</span>
+    <button class="close-announcement-btn" onclick="document.getElementById('announcementBar').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+
+  <!-- Header Navigation -->
+  <header class="main-header">
+    <div class="header-container">
+      <!-- Hamburger Menu Button (Mobile) -->
+      <button class="mobile-menu-btn" onclick="toggleMobileMenu(true)" aria-label="Open Navigation Menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <a href="#" class="logo-container" onclick="showTab('home')">
+        <div class="logo-icon"><i class="fa-solid fa-shirt"></i></div>
+        <div class="logo-text">
+          <h1>Smart Collection</h1>
+          <span>Ready Made Hub</span>
+        </div>
+      </a>
+      
+      <nav class="nav-links">
+        <a href="#" class="nav-link active" id="nav-home" onclick="showTab('home')"><i class="fa-solid fa-house"></i> Home</a>
+        <a href="#" class="nav-link" id="nav-shop" onclick="showTab('shop')"><i class="fa-solid fa-bag-shopping"></i> Shop</a>
+        <a href="#" class="nav-link" id="nav-ai-stylist" onclick="showTab('ai-stylist')"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Stylist</a>
+        <a href="#" class="nav-link" id="nav-wishlist" onclick="showTab('wishlist')"><i class="fa-solid fa-heart"></i> Wishlist</a>
+        <a href="#" class="nav-link" id="nav-history" onclick="showTab('history')"><i class="fa-solid fa-clock-rotate-left"></i> History</a>
+        <a href="#" class="nav-link" id="nav-admin" onclick="showTab('admin')"><i class="fa-solid fa-user-gear"></i> Admin</a>
+      </nav>
+
+      <!-- Navbar Search Bar -->
+      <div class="header-search-bar">
+        <input type="text" id="navbarSearchInput" placeholder="Search premium fashion..." oninput="handleNavbarSearch(event)" autocomplete="off">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </div>
+
+      <div class="header-actions">
+        <!-- PWA Install Button -->
+        <button class="install-app-btn" id="pwaInstallBtn" style="display: none; align-items: center; gap: 6px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; border-radius: 50px; height: 38px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+          <i class="fa-solid fa-cloud-arrow-down"></i> <span>Install App</span>
+        </button>
+
+        <!-- Customer Profile / Login Trigger -->
+        <button class="profile-trigger-btn" id="profileTriggerBtn" onclick="openProfileOrLoginModal()" aria-label="Customer Profile" style="background: rgba(90, 82, 237, 0.1); color: var(--primary); border: 1px solid rgba(90, 82, 237, 0.3); border-radius: 50px; height: 38px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: background 0.2s, color 0.2s;">
+          <i class="fa-solid fa-circle-user" style="font-size: 1.05rem;"></i> <span id="profileTriggerText">Login</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle dark/light mode">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        
+        <!-- Cart Trigger -->
+        <button class="cart-trigger-btn" id="cartTriggerBtn" onclick="toggleCart(true)" aria-label="Open Shopping Cart">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span class="cart-count-badge" id="cartCountBadge">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Views Container -->
+  <main class="main-content">
+    
+    <!-- Tab 1: Home View -->
+    <section id="tab-home" class="tab-view active">
+      <!-- Hero Banner Slider -->
+      <div class="hero-slider-container">
+        <div class="hero-slider" id="heroSlider">
+          
+          <!-- Slide 1: Main Brand Intro & Girls Fashion -->
+          <div class="hero-slide active" style="background-image: url('images/fashion_banner_2.png');">
+            <div class="hero-content">
+              <span class="hero-subtitle">Grand Opening Sale</span>
+              <h2 class="hero-title">Elevate Your Style Every Day</h2>
+              <p class="hero-description">Discover a curated collection of beautiful ready-made apparel for Men, Girls, and Children. Experience modern designs crafted for Jalalpur's finest fashion enthusiasts.</p>
+              <div class="hero-cta-group">
+                <button class="btn btn-primary btn-large" onclick="showTab('shop')">Explore Shop <i class="fa-solid fa-arrow-right"></i></button>
+                <button class="btn btn-secondary btn-large" onclick="showTab('ai-stylist')">Virtual AI Try-on <i class="fa-solid fa-wand-magic-sparkles"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 2: Kids Fashion Highlight -->
+          <div class="hero-slide" style="background-image: url('images/fashion_banner_1.png');">
+            <div class="hero-content">
+              <span class="hero-subtitle">Premium Children's Wear</span>
+              <h2 class="hero-title">Playful & Cozy Kids Outfits</h2>
+              <p class="hero-description">Keep your little ones comfortable and stylish with our ready-made dungarees, co-ords, and frocks. Crafted from premium breathable fabrics for ultimate daily comfort.</p>
+              <div class="hero-cta-group">
+                <button class="btn btn-primary btn-large" onclick="filterShopByCategory('children')">Shop Kids Collection <i class="fa-solid fa-bag-shopping"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 3: Men's Fashion Highlight -->
+          <div class="hero-slide" style="background-image: url('images/fashion_banner_3.png');">
+            <div class="hero-content">
+              <span class="hero-subtitle">Polished Men's Look</span>
+              <h2 class="hero-title">Smart Casuals & Shirts</h2>
+              <p class="hero-description">Discover premium cotton shirts, polished linen blends, and sharp trousers tailored for the modern gentleman. Perfect for work, leisure, or weekend gatherings.</p>
+              <div class="hero-cta-group">
+                <button class="btn btn-primary btn-large" onclick="filterShopByCategory('men')">Shop Men's Wear <i class="fa-solid fa-user-tie"></i></button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Slider Controls -->
+        <button class="slider-arrow prev" onclick="moveHeroSlide(-1)" aria-label="Previous Slide"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="slider-arrow next" onclick="moveHeroSlide(1)" aria-label="Next Slide"><i class="fa-solid fa-chevron-right"></i></button>
+        
+        <!-- Slider Dots -->
+        <div class="slider-dots" id="sliderDots">
+          <span class="slider-dot active" onclick="setHeroSlide(0)"></span>
+          <span class="slider-dot" onclick="setHeroSlide(1)"></span>
+          <span class="slider-dot" onclick="setHeroSlide(2)"></span>
+        </div>
+      </div>
+
+      <!-- ⚡ FLASH SALE SECTION (Countdown Active) -->
+      <section class="section flash-sale-section" id="flashSaleContainer" style="background: linear-gradient(135deg, rgba(231,29,54,0.05) 0%, rgba(255,183,3,0.05) 100%); border: 1px solid rgba(231,29,54,0.15); border-radius: var(--radius-md); padding: 25px; margin: 30px 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 2.2rem; animation: pulse 1.5s infinite;">⚡</span>
+            <div>
+              <h3 style="margin: 0; font-size: 1.4rem; font-weight: 800; color: #e71d36; text-transform: uppercase; letter-spacing: 0.5px;">Flash Sale!</h3>
+              <p style="margin: 0; font-size: 0.82rem; color: var(--text-muted);">Limited quantities, deals refresh daily</p>
+            </div>
+          </div>
+          <div style="background: #e71d36; color: white; padding: 8px 16px; border-radius: 50px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(231,29,54,0.3);">
+            <i class="fa-solid fa-hourglass-half"></i> Ending in: <span id="flashSaleTimer">02h 45m 12s</span>
+          </div>
+        </div>
+        <div class="product-grid" id="flashSaleProductGrid">
+          <!-- Loaded dynamically in app.js -->
+        </div>
+      </section>
+
+      <!-- 🎁 OFFER BANNERS GRID -->
+      <section class="section promo-banners-section" style="margin: 30px 0;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;" class="promo-grid">
+          <div class="promo-banner" onclick="filterShopByCategory('men')" style="position: relative; border-radius: var(--radius-md); overflow: hidden; height: 180px; cursor: pointer; background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.6)), url('images/fashion_banner_3.png') center/cover; border: 1px solid var(--border); transition: transform 0.2s;">
+            <div style="position: absolute; bottom: 20px; left: 20px; color: white;">
+              <span style="background: #f59f00; color: #161c2d; font-size: 0.7rem; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase;">Limited Offer</span>
+              <h4 style="margin: 8px 0 4px 0; font-size: 1.3rem; font-weight: 800;">Men's Summer Casuals</h4>
+              <p style="margin: 0; font-size: 0.85rem; opacity: 0.9;">Flat 40% Off on Pure Linen Shirts & Chinos</p>
+            </div>
+          </div>
+          <div class="promo-banner" onclick="filterShopByCategory('girls')" style="position: relative; border-radius: var(--radius-md); overflow: hidden; height: 180px; cursor: pointer; background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.6)), url('images/fashion_banner_2.png') center/cover; border: 1px solid var(--border); transition: transform 0.2s;">
+            <div style="position: absolute; bottom: 20px; left: 20px; color: white;">
+              <span style="background: #2ec4b6; color: white; font-size: 0.7rem; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase;">Festive BOGO</span>
+              <h4 style="margin: 8px 0 4px 0; font-size: 1.3rem; font-weight: 800;">Girls Ethnic Gowns</h4>
+              <p style="margin: 0; font-size: 0.85rem; opacity: 0.9;">Buy 2 Get 1 Free on all Flower Frocks & Gowns</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 🎂 SHOP BY EVENT SECTION -->
+      <section class="section events-section" style="margin: 35px 0;">
+        <div style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
+          <h3 style="margin: 0; font-size: 1.6rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-calendar-days"></i> Shop by Occasion</h3>
+          <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">Find the perfect outfit styled for your special event</p>
+        </div>
+        <div class="event-cards-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px;">
+          
+          <!-- Card 1: Birthday Party -->
+          <div class="event-card" onclick="filterShopByEvent('birthday')" style="position: relative; border-radius: var(--radius-md); overflow: hidden; height: 220px; cursor: pointer; border: 1px solid var(--border); transition: all 0.3s ease; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0) 100%), url('images/event_birthday.png') center/cover;">
+            <div style="color: white; z-index: 2; position: relative;">
+              <div style="font-size: 2.2rem; margin-bottom: 8px;">🎂</div>
+              <h4 style="margin: 0 0 4px 0; font-size: 1.15rem; font-weight: 800;">Birthday Party</h4>
+              <p style="margin: 0; font-size: 0.78rem; opacity: 0.85; font-weight: 500;">Fun, vibrant party outfits</p>
+            </div>
+          </div>
+
+          <!-- Card 2: Wedding -->
+          <div class="event-card" onclick="filterShopByEvent('wedding')" style="position: relative; border-radius: var(--radius-md); overflow: hidden; height: 220px; cursor: pointer; border: 1px solid var(--border); transition: all 0.3s ease; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0) 100%), url('images/event_wedding.png') center/cover;">
+            <div style="color: white; z-index: 2; position: relative;">
+              <div style="font-size: 2.2rem; margin-bottom: 8px;">💒</div>
+              <h4 style="margin: 0 0 4px 0; font-size: 1.15rem; font-weight: 800;">Wedding</h4>
+              <p style="margin: 0; font-size: 0.78rem; opacity: 0.85; font-weight: 500;">Elegant traditional ensembles</p>
+            </div>
+          </div>
+
+          <!-- Card 3: Festival -->
+          <div class="event-card" onclick="filterShopByEvent('festival')" style="position: relative; border-radius: var(--radius-md); overflow: hidden; height: 220px; cursor: pointer; border: 1px solid var(--border); transition: all 0.3s ease; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0) 100%), url('images/event_festival.png') center/cover;">
+            <div style="color: white; z-index: 2; position: relative;">
+              <div style="font-size: 2.2rem; margin-bottom: 8px;">🎉</div>
+              <h4 style="margin: 0 0 4px 0; font-size: 1.15rem; font-weight: 800;">Festival</h4>
+              <p style="margin: 0; font-size: 0.78rem; opacity: 0.85; font-weight: 500;">Festive celebrations ready</p>
+            </div>
+          </div>
+
+          <!-- Card 4: School Function -->
+          <div class="event-card" onclick="filterShopByEvent('school')" style="position: relative; border-radius: var(--radius-md); overflow: hidden; height: 220px; cursor: pointer; border: 1px solid var(--border); transition: all 0.3s ease; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0) 100%), url('images/event_school.png') center/cover;">
+            <div style="color: white; z-index: 2; position: relative;">
+              <div style="font-size: 2.2rem; margin-bottom: 8px;">🏫</div>
+              <h4 style="margin: 0 0 4px 0; font-size: 1.15rem; font-weight: 800;">School Function</h4>
+              <p style="margin: 0; font-size: 0.78rem; opacity: 0.85; font-weight: 500;">Smart and polished kids wear</p>
+            </div>
+          </div>
+
+          <!-- Card 5: Office Wear -->
+          <div class="event-card" onclick="filterShopByEvent('office')" style="position: relative; border-radius: var(--radius-md); overflow: hidden; height: 220px; cursor: pointer; border: 1px solid var(--border); transition: all 0.3s ease; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0) 100%), url('images/event_office.png') center/cover;">
+            <div style="color: white; z-index: 2; position: relative;">
+              <div style="font-size: 2.2rem; margin-bottom: 8px;">👔</div>
+              <h4 style="margin: 0 0 4px 0; font-size: 1.15rem; font-weight: 800;">Office Wear</h4>
+              <p style="margin: 0; font-size: 0.78rem; opacity: 0.85; font-weight: 500;">Sharp and professional style</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 🎁 OUTFIT BUNDLES DEALS SECTION -->
+      <section class="section bundles-section" id="outfitBundlesSection" style="margin: 40px 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
+          <div>
+            <h3 style="margin: 0; font-size: 1.6rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-gift"></i> Outfit Bundles</h3>
+            <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">Buy a matching set together and save big!</p>
+          </div>
+          <button class="btn btn-secondary btn-small" onclick="generateAiBundle()" style="border-radius: 20px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Let AI Match Outfit</button>
+        </div>
+
+        <div class="bundles-tabs-container">
+          <!-- Featured Pre-set Bundles -->
+          <div class="bundles-grid" id="storefrontBundlesGrid">
+            <!-- Dynamic pre-set bundles loaded here -->
+          </div>
+
+          <!-- Mix & Match Custom Builder Card -->
+          <div style="margin-top: 20px; text-align: left;">
+            <h4 style="margin: 0 0 15px 0; font-size: 1.15rem; font-weight: 700; color: var(--text);"><i class="fa-solid fa-shuffle"></i> Mix & Match: Create Your Own Bundle</h4>
+            <div class="mix-match-container">
+              <!-- Left Selectors Form -->
+              <div class="mix-match-selectors">
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 5px;">
+                  <label for="mixMatchItemA" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Select First Item *</label>
+                  <select id="mixMatchItemA" onchange="updateMixAndMatchPreview()" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                    <option value="">-- Choose Product A --</option>
+                  </select>
+                </div>
+                <div class="form-group" id="mixMatchSizeContainerA" style="display: none; flex-direction: column; gap: 5px;">
+                  <label for="mixMatchSizeA" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Choose Size for First Item *</label>
+                  <select id="mixMatchSizeA" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                  </select>
+                </div>
+
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 5px;">
+                  <label for="mixMatchItemB" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Select Second Item *</label>
+                  <select id="mixMatchItemB" onchange="updateMixAndMatchPreview()" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                    <option value="">-- Choose Product B --</option>
+                  </select>
+                </div>
+                <div class="form-group" id="mixMatchSizeContainerB" style="display: none; flex-direction: column; gap: 5px;">
+                  <label for="mixMatchSizeB" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Choose Size for Second Item *</label>
+                  <select id="mixMatchSizeB" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                  </select>
+                </div>
+              </div>
+
+              <!-- Right Comparison / Price Calculation Pane -->
+              <div class="mix-match-preview-pane">
+                <div id="mixMatchPlaceholder" style="text-align: center; color: var(--text-muted);">
+                  <i class="fa-solid fa-tags" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5; display: block;"></i>
+                  Select any two products from the dropdowns on the left to configure a custom bundle and check available discount rates!
+                </div>
+                <div id="mixMatchActivePreview" style="display: none; width: 100%; flex-direction: column; gap: 20px; text-align: center;">
+                  <div class="bundle-visual" style="margin-bottom: 0;">
+                    <div class="bundle-visual-item">
+                      <img id="mixMatchPreviewImgA" src="" alt="Item A">
+                    </div>
+                    <div class="bundle-visual-plus"><i class="fa-solid fa-plus"></i></div>
+                    <div class="bundle-visual-item">
+                      <img id="mixMatchPreviewImgB" src="" alt="Item B">
+                    </div>
+                  </div>
+                  <div>
+                    <div id="mixMatchDiscountText" class="bundle-savings-badge" style="margin-bottom: 5px;">15% Bundle Discount Applied!</div>
+                    <div style="font-size: 0.9rem; text-decoration: line-through; color: var(--text-muted); margin-bottom: 2px;">
+                      Original Total: <span id="mixMatchOriginalTotal">₹0</span>
+                    </div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #2ec4b6; margin-bottom: 15px;" id="mixMatchBundleTotal">
+                      ₹0
+                    </div>
+                    <button class="btn btn-primary btn-large btn-full" onclick="purchaseMixAndMatch()"><i class="fa-solid fa-bolt"></i> One-Click Buy Bundle</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick Category Selectors -->
+      <section class="section category-quick-select">
+        <h3 class="section-title text-center">Shop by Category</h3>
+        <div class="category-grid">
+          <div class="category-card" onclick="filterShopByCategory('children')">
+            <div class="cat-image-container kids-bg">
+              <i class="fa-solid fa-child-holding-hands"></i>
+            </div>
+            <h4>Small Children</h4>
+            <p>Comfortable ready-made clothes</p>
+          </div>
+          <div class="category-card" onclick="filterShopByCategory('girls')">
+            <div class="cat-image-container girls-bg">
+              <i class="fa-solid fa-person-dress"></i>
+            </div>
+            <h4>Girls Fashion</h4>
+            <p>Beautiful gowns & modern tops</p>
+          </div>
+          <div class="category-card" onclick="filterShopByCategory('men')">
+            <div class="cat-image-container men-bg">
+              <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <h4>Men's Wear</h4>
+            <p>Polished shirts, t-shirts & trousers</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Why Choose Us / Features -->
+      <section class="features-section">
+        <div class="feature-card">
+          <i class="fa-solid fa-truck-fast"></i>
+          <h4>Local Fast Shipping</h4>
+          <p>Quick pickup options and local delivery in Saran Jalalpur area.</p>
+        </div>
+        <div class="feature-card">
+          <i class="fa-brands fa-whatsapp"></i>
+          <h4>Order on WhatsApp</h4>
+          <p>Chat directly and confirm stock instantly via WhatsApp message.</p>
+        </div>
+        <div class="feature-card">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <h4>Hassle-Free Exchange</h4>
+          <p>No questions asked 7-day exchange window if size doesn't fit.</p>
+        </div>
+        <div class="feature-card">
+          <i class="fa-solid fa-circle-check"></i>
+          <h4>100% Quality Ready-Made</h4>
+          <p>Premium fabrics selected with utmost care for all age groups.</p>
+        </div>
+      </section>
+
+      <!-- Featured Stock Carousel / Grid -->
+      <section class="section featured-products">
+        <div class="section-header">
+          <h3 class="section-title">New Arrivals</h3>
+          <button class="view-all-link" onclick="showTab('shop')">View All <i class="fa-solid fa-angle-right"></i></button>
+        </div>
+        <div class="product-grid" id="featuredProductGrid">
+          <!-- Dynamic loading of featured products -->
+        </div>
+      </section>
+
+      <!-- Recently Viewed Products Section (Home) -->
+      <section class="section recently-viewed-section" id="recentlyViewedSectionHome" style="display: none; margin: 40px 0;">
+        <div class="section-header">
+          <h3 class="section-title">Recently Viewed</h3>
+          <button class="view-all-link" onclick="clearRecentlyViewed()" style="color: var(--danger); font-size: 0.8rem; background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-trash-can"></i> Clear History
+          </button>
+        </div>
+        <div class="product-grid" id="recentlyViewedGridHome">
+          <!-- Dynamic loading of recently viewed products -->
+        </div>
+      </section>
+
+      <!-- 📩 NEWSLETTER SIGNUP SECTION -->
+      <section class="section newsletter-section" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 40px 20px; margin: 40px 0; text-align: center; box-shadow: var(--shadow-sm); position: relative; overflow: hidden;">
+        <div style="position: absolute; top: -30px; right: -30px; width: 100px; height: 100px; border-radius: 50%; background: var(--primary-glow); filter: blur(40px);"></div>
+        <div style="position: absolute; bottom: -30px; left: -30px; width: 100px; height: 100px; border-radius: 50%; background: rgba(46, 196, 182, 0.1); filter: blur(40px);"></div>
+        
+        <div style="max-width: 600px; margin: 0 auto; position: relative; z-index: 2;">
+          <i class="fa-regular fa-envelope-open" style="font-size: 2.8rem; color: var(--primary); margin-bottom: 15px;"></i>
+          <h3 style="margin: 0 0 8px 0; font-size: 1.5rem; font-weight: 800; color: var(--text);">Unlock 10% Off Your Next Purchase</h3>
+          <p style="margin: 0 0 25px 0; font-size: 0.88rem; color: var(--text-muted); line-height: 1.5;">Subscribe to the Smart Collection newsletter! Get alerts about new arrivals, flash sales, and exclusive discount codes directly in your inbox.</p>
+          
+          <form id="newsletterForm" onsubmit="handleNewsletterSubmit(event)" style="display: flex; gap: 10px; max-width: 480px; margin: 0 auto; flex-wrap: wrap;">
+            <input type="email" id="newsletterEmail" placeholder="Enter your email address *" required style="flex: 1; min-width: 240px; padding: 12px 20px; border-radius: 50px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text); font-size: 0.9rem; transition: border-color 0.2s;">
+            <button type="submit" class="btn btn-primary" style="padding: 12px 28px; border-radius: 50px; font-weight: 700; font-size: 0.9rem; white-space: nowrap;">
+              Subscribe
+            </button>
+          </form>
+        </div>
+      </section>
+    </section>
+
+    <!-- Tab 2: Shop View -->
+    <section id="tab-shop" class="tab-view">
+      <div class="shop-layout">
+        <!-- Sidebar Filters -->
+        <aside class="shop-sidebar">
+          <div class="filter-group">
+            <h4 class="filter-title">Search</h4>
+            <div class="search-input-wrapper">
+              <input type="text" id="shopSearchInput" placeholder="Search clothes..." oninput="applyFilters()" autocomplete="off">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <div id="searchSuggestionsDropdown" class="search-suggestions-dropdown" style="display: none;"></div>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <h4 class="filter-title">Category</h4>
+            <div class="filter-buttons">
+              <button class="filter-btn active" id="btn-cat-all" onclick="setCategoryFilter('all')">All</button>
+              <button class="filter-btn" id="btn-cat-children" onclick="setCategoryFilter('children')">Children</button>
+              <button class="filter-btn" id="btn-cat-girls" onclick="setCategoryFilter('girls')">Girls</button>
+              <button class="filter-btn" id="btn-cat-men" onclick="setCategoryFilter('men')">Men</button>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <h4 class="filter-title">Shop by Event</h4>
+            <div class="filter-buttons event-filter-buttons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+              <button class="filter-btn active" id="btn-event-all" onclick="setEventFilter('all')" style="font-size: 0.82rem; padding: 8px 4px; text-align: center; justify-content: center;">All Events</button>
+              <button class="filter-btn" id="btn-event-birthday" onclick="setEventFilter('birthday')" style="font-size: 0.82rem; padding: 8px 4px; text-align: center; justify-content: center;">🎂 Birthday</button>
+              <button class="filter-btn" id="btn-event-wedding" onclick="setEventFilter('wedding')" style="font-size: 0.82rem; padding: 8px 4px; text-align: center; justify-content: center;">💒 Wedding</button>
+              <button class="filter-btn" id="btn-event-festival" onclick="setEventFilter('festival')" style="font-size: 0.82rem; padding: 8px 4px; text-align: center; justify-content: center;">🎉 Festival</button>
+              <button class="filter-btn" id="btn-event-school" onclick="setEventFilter('school')" style="font-size: 0.82rem; padding: 8px 4px; text-align: center; justify-content: center;">🏫 School</button>
+              <button class="filter-btn" id="btn-event-office" onclick="setEventFilter('office')" style="font-size: 0.82rem; padding: 8px 4px; text-align: center; justify-content: center;">👔 Office</button>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <h4 class="filter-title">Price Range (₹)</h4>
+            <div class="price-slider-container">
+              <input type="range" id="priceRangeInput" min="100" max="3000" step="50" value="3000" oninput="updatePriceSliderLabel()">
+              <div class="price-labels">
+                <span>Min: ₹100</span>
+                <span id="priceSliderLabel">Max: ₹3000</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <h4 class="filter-title">Availability</h4>
+            <label class="toggle-switch-label">
+              <input type="checkbox" id="inStockCheckbox" onchange="applyFilters()">
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">Only In-Stock items</span>
+            </label>
+          </div>
+
+          <div class="filter-group">
+            <h4 class="filter-title">Sort By</h4>
+            <select id="shopSortSelect" class="styled-select" onchange="applyFilters()">
+              <option value="default">Featured</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="name-asc">Name: A to Z</option>
+            </select>
+          </div>
+
+          <button class="btn btn-secondary btn-full" onclick="resetFilters()">Reset Filters</button>
+        </aside>
+
+        <!-- Main Product Display -->
+        <div class="shop-main">
+          <div class="shop-results-bar">
+            <span id="shopResultsCount">Showing 0 products</span>
+            <span class="location-badge"><i class="fa-solid fa-location-dot"></i> Saran, Jalalpur</span>
+          </div>
+          <div class="product-grid" id="shopProductGrid">
+            <!-- Products rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Recently Viewed Products Section (Shop) -->
+      <section class="section recently-viewed-section" id="recentlyViewedSectionShop" style="display: none; margin: 40px auto 0 auto; max-width: 1300px; padding: 0 30px; width: 100%;">
+        <div class="section-header">
+          <h3 class="section-title">Recently Viewed Items</h3>
+          <button class="view-all-link" onclick="clearRecentlyViewed()" style="color: var(--danger); font-size: 0.8rem; background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-trash-can"></i> Clear History
+          </button>
+        </div>
+        <div class="product-grid" id="recentlyViewedGridShop">
+          <!-- Dynamic loading of recently viewed products -->
+        </div>
+      </section>
+    </section>
+
+    <!-- Tab 3: AI Stylist & Try-On View -->
+    <section id="tab-ai-stylist" class="tab-view">
+      <div class="ai-stylist-intro text-center">
+        <h2 class="section-title"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Virtual Stylist & Try-On</h2>
+        <p class="section-subtitle">Stuck on what fits best? Let our intelligent virtual stylist assist you, or preview clothes on our custom model avatars!</p>
+      </div>
+
+      <div class="ai-layout">
+        <!-- AI Try-On Canvas (Mannequin view) -->
+        <div class="ai-try-on-panel">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-user-tie"></i> 1. Choose Model & Try Clothing</h3>
+          </div>
+          <div class="try-on-workspace">
+            <div class="avatar-select-bar" style="display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+              <label>Choose Model:</label>
+              <button class="btn btn-small btn-secondary active" id="btn-avatar-boy" onclick="selectAvatar('boy')">Kid Boy</button>
+              <button class="btn btn-small btn-secondary" id="btn-avatar-girl" onclick="selectAvatar('girl')">Girl Teen</button>
+              <button class="btn btn-small btn-secondary" id="btn-avatar-man" onclick="selectAvatar('man')">Gentleman</button>
+              <span style="color:var(--border);">|</span>
+              <button class="btn btn-small btn-primary" onclick="document.getElementById('userPhotoUpload').click()"><i class="fa-solid fa-upload"></i> Upload Photo</button>
+              <input type="file" id="userPhotoUpload" style="display: none;" accept="image/*" onchange="handleUserPhotoUpload(event)">
+              <button class="btn btn-small btn-primary" id="btnUseCamera" onclick="openCamera()"><i class="fa-solid fa-camera"></i> Click Photo</button>
+            </div>
+            
+            <div class="try-on-canvas-container">
+              <!-- Mannequin / Model representation -->
+              <div class="mannequin-wrapper" id="mannequinWrapper">
+                <!-- SVG/Image representing chosen Avatar -->
+                <div class="avatar-image-holder" id="avatarImageHolder">
+                  <!-- Set via JS -->
+                </div>
+                <!-- Try on Overlay garment -->
+                <div class="garment-overlay" id="garmentOverlay"></div>
+                <!-- AI Glowing Scan Bar -->
+                <div class="ai-scan-bar" id="aiScanBar"></div>
+              </div>
+            </div>
+
+            <!-- Position Adjustment Tools for Uploaded Photos -->
+            <div class="garment-adjust-controls" id="garmentAdjustControls" style="display: none; justify-content: center; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; background-color: var(--bg-accent); padding: 12px; border-radius: var(--radius-sm); align-items: center;">
+              <span style="font-size:0.85rem; font-weight:700; width:100%; text-align:center; margin-bottom:2px;"><i class="fa-solid fa-arrows-up-down-left-right"></i> Fit Clothes to your Photo:</span>
+              <p style="font-size:0.75rem; color:var(--text-muted); width:100%; text-align:center; margin-bottom:6px;">👉 You can drag & drop the clothes directly over your photo!</p>
+              
+              <div style="display:flex; align-items:center; gap:8px; width:100%; justify-content:center; margin-bottom:6px;">
+                <label style="font-size:0.8rem; font-weight:600;"><i class="fa-solid fa-maximize"></i> Size:</label>
+                <input type="range" id="garmentScaleSlider" min="0.2" max="4.0" step="0.05" value="1.0" style="width:160px; height:6px; cursor:pointer;" oninput="adjustGarmentScale(this.value)">
+                <span id="scaleSliderVal" style="font-size:0.8rem; font-weight:700; width:45px; text-align:left;">100%</span>
+              </div>
+              
+              <button class="btn btn-small btn-secondary" style="padding:6px 12px;" onclick="adjustGarment('up')" title="Move Up"><i class="fa-solid fa-arrow-up"></i></button>
+              <button class="btn btn-small btn-secondary" style="padding:6px 12px;" onclick="adjustGarment('down')" title="Move Down"><i class="fa-solid fa-arrow-down"></i></button>
+              <button class="btn btn-small btn-secondary" style="padding:6px 12px;" onclick="adjustGarment('left')" title="Move Left"><i class="fa-solid fa-arrow-left"></i></button>
+              <button class="btn btn-small btn-secondary" style="padding:6px 12px;" onclick="adjustGarment('right')" title="Move Right"><i class="fa-solid fa-arrow-right"></i></button>
+              <button class="btn btn-small btn-secondary" style="padding:6px 12px;" onclick="adjustGarment('scale-up')" title="Scale Up"><i class="fa-solid fa-plus"></i></button>
+              <button class="btn btn-small btn-secondary" style="padding:6px 12px;" onclick="adjustGarment('scale-down')" title="Scale Down"><i class="fa-solid fa-minus"></i></button>
+              <button class="btn btn-small btn-secondary" style="padding:6px 12px; color:var(--primary);" onclick="resetGarmentPosition()" title="Reset Position"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+            </div>
+
+            <div class="try-on-controls">
+              <p class="help-text">Click on any garment below to try it on your photo</p>
+              <div class="garment-selector-grid" id="tryOnGarmentsGrid">
+                <!-- Load products dynamically here -->
+              </div>
+              <button class="btn btn-primary" id="tryOnAddToCartBtn" style="display: none;" onclick="addActiveGarmentToCart()">Add Try-On to Cart <i class="fa-solid fa-cart-plus"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Assistant Chatbot -->
+        <div class="ai-chat-panel">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-comment-dots"></i> 2. Chat with Smart AI Stylist</h3>
+          </div>
+          <div class="chat-container">
+            <div class="chat-messages" id="aiChatMessages">
+              <div class="chat-message stylist">
+                <div class="avatar"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div class="message-bubble">
+                  Hello! I'm your AI Smart Stylist. Tell me who you are shopping for and the occasion (e.g., "birthday party for my 5-year old", "premium casual shirt for men", or "party gown for a girl"). I'll recommend the best fits!
+                </div>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <input type="text" id="aiChatInput" placeholder="Ask AI Stylist (e.g., casual shirts for men...)" onkeydown="if(event.key === 'Enter') sendAiMessage()">
+              <button class="btn btn-primary btn-icon" onclick="sendAiMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab: Wishlist View -->
+    <section id="tab-wishlist" class="tab-view">
+      <h2 class="section-title"><i class="fa-solid fa-heart" style="color: #e71d36;"></i> Your Wishlist</h2>
+      <p class="section-subtitle">Keep track of the clothing you love and discover personalized recommendations.</p>
+      
+      <!-- Logged-out/empty state -->
+      <div id="wishlistEmptyMessage" class="empty-state">
+        <i class="fa-solid fa-heart-crack" style="color: var(--text-muted);"></i>
+        <h3 id="wishlistEmptyTitle">Wishlist is empty</h3>
+        <p id="wishlistEmptyText">Save your favorite ready-made garments by clicking the heart icon on products.</p>
+        <button class="btn btn-primary" id="wishlistEmptyBtn" onclick="showTab('shop')">Explore Shop</button>
+      </div>
+
+      <!-- Wishlisted Products Grid -->
+      <div class="shop-main" id="wishlistItemsContainer" style="display: none; max-width: 1200px; margin: 0 auto 40px auto; padding: 0 15px;">
+        <div class="product-grid" id="wishlistProductGrid">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Recommendations Section -->
+      <section class="section wishlist-recommendations" id="wishlistRecommendationsSection" style="display: none; max-width: 1200px; margin: 40px auto 20px auto; padding: 0 15px; border-top: 1px solid var(--border); padding-top: 40px;">
+        <h3 class="section-title text-center" style="margin-bottom: 8px;"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> Recommended for You</h3>
+        <p class="section-subtitle text-center" style="margin-bottom: 30px;">Personalized matching clothes based on your wishlist styles & category selections</p>
+        <div class="product-grid" id="wishlistRecommendationsGrid">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+    </section>
+
+    <!-- Tab 4: Purchase History View -->
+    <section id="tab-history" class="tab-view">
+      <h2 class="section-title">Your Purchase History</h2>
+      <p class="section-subtitle">Track your orders, write reviews for clothes you bought, or apply for sizing exchanges.</p>
+      
+      <div id="historyEmptyMessage" class="empty-state">
+        <i class="fa-solid fa-box-open"></i>
+        <h3>No orders found</h3>
+        <p>Make your first purchase and complete payment to view your shopping history here.</p>
+        <button class="btn btn-primary" onclick="showTab('shop')">Go Shopping</button>
+      </div>
+
+      <div class="history-list" id="historyList">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- Tab 5: Admin Panel -->
+    <section id="tab-admin" class="tab-view">
+      <!-- Admin Login Form -->
+      <div class="admin-login-wrapper" id="adminLoginWrapper">
+        <div class="admin-login-card" style="max-width: 420px; width: 90%; margin: 40px auto; padding: 30px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-hover);">
+          <div class="login-header text-center" style="margin-bottom: 20px; text-align: center;">
+            <i class="fa-solid fa-shield-halved" style="font-size: 3rem; color: var(--primary); margin-bottom: 12px; display: block;"></i>
+            <h3>Admin Portal Access</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">Enter admin credentials below to securely log into the store dashboard.</p>
+          </div>
+          
+          <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" style="display: flex; flex-direction: column; gap: 15px;">
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 5px; text-align: left;">
+              <label for="adminUsername" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Username</label>
+              <input type="text" id="adminUsername" required placeholder="smart7575" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-card); color: var(--text);">
+            </div>
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 5px; text-align: left;">
+              <label for="adminPassword" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Password</label>
+              <input type="password" id="adminPassword" required placeholder="••••••••" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-card); color: var(--text);">
+            </div>
+            <button type="submit" class="btn btn-primary btn-full" style="width: 100%; padding: 12px; margin-top: 10px;">
+              <i class="fa-solid fa-right-to-bracket"></i> Login as Admin
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Admin Dashboard Content (Hidden by default until logged in) -->
+      <div id="adminDashboardContent" style="display: none;">
+        <div class="admin-header-flex">
+          <div>
+            <h2 class="section-title">Store Management Dashboard</h2>
+            <p class="section-subtitle">Add new inventory items, control stock counts, toggle status, and process exchanges.</p>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-secondary" style="color:#e71d36; border-color:rgba(231,29,54,0.3);" onclick="handleAdminLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+          </div>
+        </div>
+
+        <!-- Admin Dashboard Sub-Navigation Tabs -->
+        <div class="admin-nav-tabs" style="display: flex; gap: 10px; max-width: 1300px; margin: 20px auto 20px auto; padding: 0 30px; border-bottom: 1px solid var(--border); padding-bottom: 15px; flex-wrap: wrap;">
+          <button class="btn btn-primary btn-small active" id="btn-admin-tab-analytics" onclick="showAdminSubTab('analytics')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-chart-line"></i> Analytics</button>
+          <button class="btn btn-secondary btn-small" id="btn-admin-tab-inventory" onclick="showAdminSubTab('inventory')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-boxes-stacked"></i> Inventory</button>
+          <button class="btn btn-secondary btn-small" id="btn-admin-tab-banners" onclick="showAdminSubTab('banners')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-regular fa-image"></i> Banners</button>
+          <button class="btn btn-secondary btn-small" id="btn-admin-tab-bundles" onclick="showAdminSubTab('bundles')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-gift"></i> Bundles</button>
+          <button class="btn btn-secondary btn-small" id="btn-admin-tab-flash-sales" onclick="showAdminSubTab('flash-sales')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-bolt"></i> Flash Sales</button>
+          <button class="btn btn-secondary btn-small" id="btn-admin-tab-orders" onclick="showAdminSubTab('orders')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-receipt"></i> Orders Log</button>
+          <button class="btn btn-secondary btn-small" id="btn-admin-tab-customers" onclick="showAdminSubTab('customers')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-users"></i> Customer DB</button>
+          <button class="btn btn-secondary btn-small" id="btn-admin-tab-exchanges-reviews" onclick="showAdminSubTab('exchanges-reviews')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-right-left"></i> Exchanges & Reviews</button>
+          <button class="btn btn-secondary btn-small" id="btn-admin-tab-audit-logs" onclick="showAdminSubTab('audit-logs')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-clock-rotate-left"></i> Audit Logs</button>
+        </div>
+
+      <!-- Admin Stat Grid -->
+      <div class="admin-stats">
+        <div class="stat-card">
+          <i class="fa-solid fa-shirt"></i>
+          <div>
+            <h4 id="adminStatTotalProducts">0</h4>
+            <p>Total Products</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <i class="fa-solid fa-file-invoice-dollar"></i>
+          <div>
+            <h4 id="adminStatTotalOrders">0</h4>
+            <p>Simulated Sales Orders</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <i class="fa-solid fa-arrows-spin"></i>
+          <div>
+            <h4 id="adminStatExchanges">0</h4>
+            <p>Active Exchanges</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <i class="fa-solid fa-users"></i>
+          <div>
+            <h4 id="adminStatTotalCustomers">0</h4>
+            <p>Total Customers</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-layout">
+        <!-- Add New Inventory Item Form -->
+        <div class="admin-form-panel">
+          <h3><i class="fa-solid fa-plus"></i> Add New Product Stock</h3>
+          <form id="addProductForm" onsubmit="handleNewProductSubmit(event)">
+            <div class="form-group">
+              <label for="prodName">Product Name *</label>
+              <input type="text" id="prodName" required placeholder="e.g. Silk Party Gown">
+            </div>
+            
+            <div class="form-row" style="grid-template-columns: repeat(4, 1fr);">
+              <div class="form-group">
+                <label for="prodCategory">Category *</label>
+                <select id="prodCategory" required class="styled-select">
+                  <option value="children">Small Children</option>
+                  <option value="girls">Girls Fashion</option>
+                  <option value="men">Men's Wear</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="prodPrice">Price (₹) *</label>
+                <input type="number" id="prodPrice" min="0" required placeholder="999">
+              </div>
+              <div class="form-group">
+                <label for="prodSalePrice">Sale Price (Opt, ₹)</label>
+                <input type="number" id="prodSalePrice" min="0" placeholder="799">
+              </div>
+              <div class="form-group">
+                <label for="prodCost">Cost Price (₹)</label>
+                <input type="number" id="prodCost" min="0" placeholder="500">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="prodStock">Stock Quantity *</label>
+                <input type="number" id="prodStock" min="0" required value="10">
+              </div>
+              <div class="form-group">
+                <label for="prodImageFile">Product Photo (Front) *</label>
+                <input type="file" id="prodImageFile" accept="image/*" required style="padding: 8px;">
+              </div>
+            </div>
+
+            <div class="form-row" style="grid-template-columns: repeat(3, 1fr); margin-top: 10px;">
+              <div class="form-group">
+                <label for="prodImageFileBack">Back Photo (Opt)</label>
+                <input type="file" id="prodImageFileBack" accept="image/*" style="padding: 4px; font-size: 0.8rem;">
+              </div>
+              <div class="form-group">
+                <label for="prodImageFileSide">Side Photo (Opt)</label>
+                <input type="file" id="prodImageFileSide" accept="image/*" style="padding: 4px; font-size: 0.8rem;">
+              </div>
+              <div class="form-group">
+                <label for="prodImageFileZoom">Zoomed Photo (Opt)</label>
+                <input type="file" id="prodImageFileZoom" accept="image/*" style="padding: 4px; font-size: 0.8rem;">
+              </div>
+            </div>
+
+            <div class="form-row" style="grid-template-columns: 2fr 1fr; gap: 15px; margin-top: 10px;">
+              <div class="form-group">
+                <label for="prodSizes">Available Sizes (Comma-separated) *</label>
+                <input type="text" id="prodSizes" placeholder="e.g. 2-3Y, 4-5Y, 5-6Y">
+              </div>
+              <div class="form-group">
+                <label for="prodEvent">Occasion Event (Opt)</label>
+                <select id="prodEvent" class="styled-select">
+                  <option value="">-- None --</option>
+                  <option value="birthday">🎂 Birthday Party</option>
+                  <option value="wedding">💒 Wedding</option>
+                  <option value="festival">🎉 Festival</option>
+                  <option value="school">🏫 School Function</option>
+                  <option value="office">👔 Office Wear</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <label for="prodDesc" style="margin-bottom: 0;">Product Description *</label>
+                <button type="button" class="btn btn-secondary btn-small" onclick="generateAIDescription()" style="padding: 2px 8px; font-size: 0.75rem; border-radius: 4px; display: flex; align-items: center; gap: 4px; background: rgba(90, 82, 237, 0.1); color: var(--primary); border: 1px solid rgba(90, 82, 237, 0.3);">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> AI Generate
+                </button>
+              </div>
+              <textarea id="prodDesc" rows="3" required placeholder="Describe material, sizing, care instructions..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full"><i class="fa-solid fa-square-plus"></i> Add Product Stock</button>
+          </form>
+        </div>
+
+        <!-- Inventory List / Status Controller -->
+        <div class="admin-list-panel">
+          <h3><i class="fa-solid fa-boxes-stacked"></i> Current Live Stock</h3>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Cost Price</th>
+                  <th>Sale Price</th>
+                  <th>Stock Count</th>
+                  <th>Sizes</th>
+                  <th>Occasion Event</th>
+                  <th>Availability</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminInventoryTableBody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+          <input type="file" id="adminLiveStockFileUploader" style="display:none;" accept="image/*" onchange="handleAdminLiveStockPhotoUpload(this)">
+        </div>
+      </div>
+
+      <!-- Customer Orders Management Panel -->
+      <div class="admin-orders-panel" style="max-width: 1300px; margin: 30px auto 30px auto; padding: 0 30px;">
+        <div class="admin-log-panel" style="width: 100%; margin-bottom: 30px;">
+          <h3><i class="fa-solid fa-receipt"></i> Active Customer Orders</h3>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer Name</th>
+                  <th>Phone Number</th>
+                  <th>Items Ordered</th>
+                  <th>Total Price</th>
+                  <th>Payment Proof</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="adminOrdersTableBody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Cancelled Orders Directory (Specific Zone for Cancelled Orders) -->
+        <div class="admin-log-panel" style="width: 100%;">
+          <h3><i class="fa-solid fa-rectangle-xmark" style="color: #e71d36;"></i> Cancelled Orders Directory</h3>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer Name</th>
+                  <th>Phone Number</th>
+                  <th>Items Ordered</th>
+                  <th>Total Price</th>
+                  <th>Payment Proof</th>
+                  <th>Cancellation Reason</th>
+                </tr>
+              </thead>
+              <tbody id="adminCancelledOrdersTableBody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Database Panel -->
+      <div class="admin-customers-panel" style="max-width: 1300px; margin: 30px auto 30px auto; padding: 0 30px;">
+        <div class="admin-log-panel" style="width: 100%;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h3><i class="fa-solid fa-users"></i> Customer Database</h3>
+            <div class="search-input-wrapper" style="max-width: 300px; margin: 0; position: relative;">
+              <input type="text" id="adminCustomerSearchInput" placeholder="Search name or phone..." oninput="renderAdminCustomers()" style="padding: 10px 12px 10px 35px; width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+              <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;"></i>
+            </div>
+          </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Customer Name</th>
+                  <th>Phone Number</th>
+                  <th style="text-align: center;">Total Orders</th>
+                  <th style="text-align: right; padding-right: 20px;">Total Spend</th>
+                  <th style="text-align: center; width: 120px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminCustomersTableBody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analytics Dashboard Panel -->
+      <div class="admin-analytics-panel" style="max-width: 1300px; margin: 30px auto 30px auto; padding: 0 30px;">
+        <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 30px; align-items: start; flex-wrap: wrap;">
+          
+          <!-- Sales Graph Block -->
+          <div class="admin-log-panel" style="margin: 0; min-height: 480px; width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+              <h3><i class="fa-solid fa-chart-line"></i> Store Sales Analytics</h3>
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div class="filter-buttons" style="display: flex; gap: 6px; margin: 0;">
+                  <button class="btn btn-secondary btn-small active" id="btn-sales-daily" onclick="setSalesTimescale('daily')" style="padding: 6px 12px; font-size: 0.8rem;">Daily</button>
+                  <button class="btn btn-secondary btn-small" id="btn-sales-weekly" onclick="setSalesTimescale('weekly')" style="padding: 6px 12px; font-size: 0.8rem;">Weekly</button>
+                  <button class="btn btn-secondary btn-small" id="btn-sales-monthly" onclick="setSalesTimescale('monthly')" style="padding: 6px 12px; font-size: 0.8rem;">Monthly</button>
+                </div>
+                
+                <!-- Export Dropdown -->
+                <div class="dropdown-export" style="position: relative; display: inline-block;">
+                  <button class="btn btn-primary btn-small" onclick="toggleExportDropdown()" style="padding: 8px 14px; font-size: 0.8rem; border-radius: 4px; display: flex; align-items: center; gap: 6px; font-weight: 700; cursor: pointer;">
+                    <i class="fa-solid fa-file-export"></i> Export Report <i class="fa-solid fa-caret-down"></i>
+                  </button>
+                  <div id="exportDropdownMenu" style="display: none; position: absolute; right: 0; top: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow); z-index: 100; min-width: 150px; margin-top: 5px; overflow: hidden;">
+                    <a href="javascript:void(0)" onclick="exportSalesReport('csv')" style="display: block; padding: 10px 15px; font-size: 0.8rem; color: var(--text); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--border); transition: background 0.2s;"><i class="fa-solid fa-file-csv" style="color: #2ec4b6; margin-right: 8px; font-size: 0.9rem;"></i> Export to CSV</a>
+                    <a href="javascript:void(0)" onclick="exportSalesReport('excel')" style="display: block; padding: 10px 15px; font-size: 0.8rem; color: var(--text); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--border); transition: background 0.2s;"><i class="fa-regular fa-file-excel" style="color: #4caf50; margin-right: 8px; font-size: 0.9rem;"></i> Export to Excel</a>
+                    <a href="javascript:void(0)" onclick="exportSalesReport('pdf')" style="display: block; padding: 10px 15px; font-size: 0.8rem; color: var(--text); font-weight: 600; text-decoration: none; transition: background 0.2s;"><i class="fa-solid fa-file-pdf" style="color: #e71d36; margin-right: 8px; font-size: 0.9rem;"></i> Export to PDF</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="position: relative; height: 350px; width: 100%;">
+              <canvas id="salesChartCanvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Side column: Revenue & Top Sellers -->
+          <div style="display: flex; flex-direction: column; gap: 30px; width: 100%;">
+            
+            <!-- Analytics Stat Cards Grid (Revenue, Cost, Profit, Margin) -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%;">
+              
+              <!-- Revenue Card -->
+              <div class="stat-card" style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, var(--bg-card), rgba(90, 82, 237, 0.05)); border: 1px solid var(--border);">
+                <p style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; font-weight: 700; color: var(--primary); margin-bottom: 8px;">Total Revenue</p>
+                <h2 id="adminAnalyticsRevenue" style="font-size: 1.8rem; font-weight: 800; color: var(--text);">₹0</h2>
+              </div>
+
+              <!-- Cost Card -->
+              <div class="stat-card" style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, var(--bg-card), rgba(231, 29, 54, 0.05)); border: 1px solid var(--border);">
+                <p style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; font-weight: 700; color: #e71d36; margin-bottom: 8px;">Total Cost</p>
+                <h2 id="adminAnalyticsCost" style="font-size: 1.8rem; font-weight: 800; color: var(--text);">₹0</h2>
+              </div>
+
+              <!-- Profit Card -->
+              <div class="stat-card" style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, var(--bg-card), rgba(46, 196, 182, 0.05)); border: 1px solid var(--border);">
+                <p style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; font-weight: 700; color: #2ec4b6; margin-bottom: 8px;">Net Profit</p>
+                <h2 id="adminAnalyticsProfit" style="font-size: 1.8rem; font-weight: 800; color: var(--text);">₹0</h2>
+              </div>
+
+              <!-- Margin Card -->
+              <div class="stat-card" style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, var(--bg-card), rgba(255, 159, 67, 0.05)); border: 1px solid var(--border);">
+                <p style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; font-weight: 700; color: #ff9f43; margin-bottom: 8px;">Profit Margin</p>
+                <h2 id="adminAnalyticsMargin" style="font-size: 1.8rem; font-weight: 800; color: var(--text);">0%</h2>
+              </div>
+
+            </div>
+
+            <!-- Top Selling Products List -->
+            <div class="admin-log-panel" style="margin: 0; width: 100%;">
+              <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-trophy"></i> Top Performing Clothes</h3>
+              <div id="adminTopSellingList" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Loaded dynamically -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Admin Exchange & Reviews Dashboard Lists -->
+      <div class="admin-dashboard-grids">
+        <!-- Exchange Requests Log -->
+        <div class="admin-log-panel">
+          <h3><i class="fa-solid fa-right-left"></i> Exchange Requests Log</h3>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Item Requested</th>
+                  <th>Reason</th>
+                  <th>Requested Details</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminExchangesTableBody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Reviews Log -->
+        <div class="admin-log-panel">
+          <h3><i class="fa-solid fa-star"></i> Customer Reviews & Feedback</h3>
+          <div class="reviews-list-container" id="adminReviewsList">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Logs Panel -->
+      <div class="admin-audit-logs-panel" style="max-width: 1300px; margin: 30px auto 30px auto; padding: 0 30px; display: none;">
+        <div class="admin-log-panel" style="width: 100%;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Admin Audit Logs</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <div class="search-input-wrapper" style="max-width: 300px; margin: 0; position: relative;">
+                <input type="text" id="adminAuditLogSearchInput" placeholder="Search action, details, operator..." oninput="filterAdminAuditLogs()" style="padding: 10px 12px 10px 35px; width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;"></i>
+              </div>
+              <button class="btn btn-secondary btn-small" onclick="renderAdminAuditLogs()" style="border-radius: var(--radius-sm); display: flex; align-items: center; gap: 6px; padding: 10px 15px;">
+                <i class="fa-solid fa-rotate"></i> Refresh
+              </button>
+            </div>
+          </div>
+          <!-- Category Filter Tabs -->
+          <div class="audit-filter-buttons" style="display: flex; gap: 8px; margin: 0 0 20px 0; flex-wrap: wrap;">
+            <button class="btn btn-primary btn-small" id="btn-audit-filter-all" onclick="setAuditLogFilter('all')" style="border-radius: 50px; padding: 6px 16px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-list"></i> All Actions</button>
+            <button class="btn btn-secondary btn-small" id="btn-audit-filter-stock" onclick="setAuditLogFilter('stock')" style="border-radius: 50px; padding: 6px 16px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-boxes-stacked"></i> Stock</button>
+            <button class="btn btn-secondary btn-small" id="btn-audit-filter-orders" onclick="setAuditLogFilter('orders')" style="border-radius: 50px; padding: 6px 16px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-receipt"></i> Orders</button>
+            <button class="btn btn-secondary btn-small" id="btn-audit-filter-customers" onclick="setAuditLogFilter('customers')" style="border-radius: 50px; padding: 6px 16px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-users"></i> Customers</button>
+            <button class="btn btn-secondary btn-small" id="btn-audit-filter-exchanges" onclick="setAuditLogFilter('exchanges')" style="border-radius: 50px; padding: 6px 16px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-right-left"></i> Exchanges</button>
+          </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th style="width: 200px;">Timestamp</th>
+                  <th style="width: 220px;">Action</th>
+                  <th>Details</th>
+                  <th style="width: 250px;">Operator</th>
+                </tr>
+              </thead>
+              <tbody id="adminAuditLogsTableBody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+          <!-- Pagination Controls -->
+          <div id="adminAuditLogsPagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; font-weight: 500; color: var(--text);">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Flash Sales Campaign Management Panel -->
+      <div class="admin-flash-sales-panel" style="display: none; max-width: 1300px; margin: 30px auto 30px auto; padding: 0 30px;">
+        <div style="display: grid; grid-template-columns: 380px 1fr; gap: 30px; align-items: start;" class="admin-flash-sales-layout">
+          <!-- Timer Campaign Controls Form -->
+          <div class="admin-form-panel">
+            <h3><i class="fa-solid fa-clock"></i> Flash Sale Settings</h3>
+            <form id="adminFlashSaleSettingsForm" onsubmit="handleFlashSaleSettingsSubmit(event)">
+              <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                <label for="flashSaleActiveToggle" style="font-weight: 600; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                  <input type="checkbox" id="flashSaleActiveToggle" checked style="width: 16px; height: 16px; cursor: pointer;">
+                  Enable Flash Sale Campaign
+                </label>
+              </div>
+              
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label for="flashSaleStartInput" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; display: block;">Start Date & Time *</label>
+                <input type="datetime-local" id="flashSaleStartInput" required style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 20px;">
+                <label for="flashSaleEndInput" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; display: block;">End Date & Time *</label>
+                <input type="datetime-local" id="flashSaleEndInput" required style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-full" style="width: 100%; padding: 12px;"><i class="fa-solid fa-floppy-disk"></i> Save Campaign Settings</button>
+            </form>
+          </div>
+
+          <!-- Products Pricing Sheet -->
+          <div class="admin-log-panel" style="margin: 0; min-height: 480px; width: 100%;">
+            <h3><i class="fa-solid fa-tags"></i> Flash Sale Products Pricing</h3>
+            <div class="admin-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th style="width: 120px;">Category</th>
+                    <th style="width: 100px; text-align: right;">Reg. Price</th>
+                    <th style="width: 130px; text-align: center;">On Flash Sale</th>
+                    <th style="width: 140px; text-align: center;">Sale Price (₹)</th>
+                    <th style="width: 110px; text-align: center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminFlashSaleProductsTableBody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banners Management Panel -->
+      <div class="admin-banners-panel" style="display: none; max-width: 1300px; margin: 30px auto 30px auto; padding: 0 30px;">
+        <div style="display: grid; grid-template-columns: 380px 1fr; gap: 30px; align-items: start;" class="admin-banners-layout">
+          <!-- Banner Editor Form -->
+          <div class="admin-form-panel">
+            <h3 id="adminBannerFormTitle"><i class="fa-solid fa-plus"></i> Add New Banner</h3>
+            <form id="adminBannerForm" onsubmit="handleBannerSubmit(event)">
+              <input type="hidden" id="adminBannerId" value="">
+              
+              <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                <label for="adminBannerTitle" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Banner Title *</label>
+                <input type="text" id="adminBannerTitle" required placeholder="e.g. Eid Sale" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                <label for="adminBannerSubtitle" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Subtitle</label>
+                <input type="text" id="adminBannerSubtitle" placeholder="e.g. Celebrate Eid in Style" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                <label for="adminBannerDesc" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Description</label>
+                <textarea id="adminBannerDesc" placeholder="e.g. Explore our premium selection..." rows="3" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text); resize: vertical; font-family: inherit;"></textarea>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                <label for="adminBannerImage" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Banner Image *</label>
+                <input type="file" id="adminBannerImage" accept="image/*" style="width: 100%; padding: 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                <div id="adminBannerImagePreviewContainer" style="margin-top: 8px; display: none; text-align: center;">
+                  <img id="adminBannerImagePreview" src="" style="max-height: 120px; max-width: 100%; border-radius: var(--radius-sm); object-fit: cover; border: 1px solid var(--border);">
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                <label for="adminBannerCtaText" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">CTA Button Text</label>
+                <input type="text" id="adminBannerCtaText" placeholder="Explore Shop" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                <label for="adminBannerCtaTab" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">CTA Target Tab</label>
+                <select id="adminBannerCtaTab" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                  <option value="shop">Shop</option>
+                  <option value="virtual-trial">Virtual Trial Room</option>
+                  <option value="home">Home</option>
+                  <option value="wishlist">Wishlist</option>
+                  <option value="profile">Profile / Loyalty</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                <label for="adminBannerCategoryFilter" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Category Filter (Optional)</label>
+                <select id="adminBannerCategoryFilter" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                  <option value="">No Filter (All Categories)</option>
+                  <option value="men">Men's Wear</option>
+                  <option value="girls">Girls' Gowns & Frocks</option>
+                  <option value="children">Children's Wear</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                <label for="adminBannerOrder" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Display Order Number</label>
+                <input type="number" id="adminBannerOrder" min="0" placeholder="0" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+              </div>
+
+              <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; text-align: left;">
+                <label for="adminBannerActiveToggle" style="font-weight: 600; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text);">
+                  <input type="checkbox" id="adminBannerActiveToggle" checked style="width: 16px; height: 16px; cursor: pointer;">
+                  Show on Storefront (Active)
+                </label>
+              </div>
+
+              <div style="display: flex; gap: 10px;">
+                <button type="submit" id="btnAdminBannerSubmit" class="btn btn-primary btn-full" style="flex: 1; padding: 12px;"><i class="fa-solid fa-floppy-disk"></i> Save Banner</button>
+                <button type="button" id="btnAdminBannerCancel" onclick="resetBannerForm()" class="btn btn-secondary" style="display: none; padding: 12px;"><i class="fa-solid fa-xmark"></i> Cancel</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Banners List Sheet -->
+          <div class="admin-log-panel" style="margin: 0; min-height: 480px; width: 100%;">
+            <h3><i class="fa-regular fa-image"></i> Custom Dynamic Banners</h3>
+            <div class="admin-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th style="width: 60px; text-align: center;">Order</th>
+                    <th style="width: 120px;">Image</th>
+                    <th>Banner Details</th>
+                    <th>CTA Target</th>
+                    <th style="width: 100px; text-align: center;">Active</th>
+                    <th style="width: 150px; text-align: center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminBannersTableBody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outfit Bundles Management Panel -->
+      <div class="admin-bundles-panel" style="display: none; max-width: 1300px; margin: 30px auto 30px auto; padding: 0 30px;">
+        <div style="display: grid; grid-template-columns: 380px 1fr; gap: 30px; align-items: start;" class="admin-bundles-layout">
+          
+          <!-- Left Column forms (Editor & Settings) -->
+          <div style="display: flex; flex-direction: column; gap: 30px;">
+            <!-- Bundle Editor Form -->
+            <div class="admin-form-panel">
+              <h3 id="adminBundleFormTitle"><i class="fa-solid fa-plus"></i> Add New Bundle</h3>
+              <form id="adminBundleForm" onsubmit="handleBundleSubmit(event)">
+                <input type="hidden" id="adminBundleId" value="">
+                
+                <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                  <label for="adminBundleTitle" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Bundle Title *</label>
+                  <input type="text" id="adminBundleTitle" required placeholder="e.g. Men's Casual Look" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                  <label for="adminBundleSubtitle" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Subtitle</label>
+                  <input type="text" id="adminBundleSubtitle" placeholder="e.g. Linen Shirt + Chinos Deal" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                  <label for="adminBundleDesc" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Description</label>
+                  <textarea id="adminBundleDesc" placeholder="e.g. Look sharp with our premium..." rows="3" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text); resize: vertical; font-family: inherit;"></textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                  <label for="adminBundleProductA" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">First Item (Product A) *</label>
+                  <select id="adminBundleProductA" required style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                    <option value="">-- Choose Product A --</option>
+                  </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                  <label for="adminBundleProductB" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Second Item (Product B) *</label>
+                  <select id="adminBundleProductB" required style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                    <option value="">-- Choose Product B --</option>
+                  </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                  <label for="adminBundlePrice" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Bundle Deal Price (₹) *</label>
+                  <input type="number" id="adminBundlePrice" required min="10" placeholder="1499" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; text-align: left;">
+                  <label for="adminBundleActiveToggle" style="font-weight: 600; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text);">
+                    <input type="checkbox" id="adminBundleActiveToggle" checked style="width: 16px; height: 16px; cursor: pointer;">
+                    Active Bundle Deal
+                  </label>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                  <button type="submit" id="btnAdminBundleSubmit" class="btn btn-primary btn-full" style="flex: 1; padding: 12px;"><i class="fa-solid fa-floppy-disk"></i> Save Bundle</button>
+                  <button type="button" id="btnAdminBundleCancel" onclick="resetBundleForm()" class="btn btn-secondary" style="display: none; padding: 12px;"><i class="fa-solid fa-xmark"></i> Cancel</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Global Discount Settings Form -->
+            <div class="admin-form-panel">
+              <h3><i class="fa-solid fa-gear"></i> Discount Settings</h3>
+              <form id="adminBundleSettingsForm" onsubmit="handleBundleSettingsSubmit(event)">
+                <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                  <label for="adminBundleSettingsMixMatch" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">Mix & Match Discount (%) *</label>
+                  <input type="number" id="adminBundleSettingsMixMatch" required min="0" max="90" placeholder="15" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                  <small style="color: var(--text-muted); font-size: 0.75rem;">Discount applied when users select their own bundle. Set to 0 to disable.</small>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 4px; text-align: left;">
+                  <label for="adminBundleSettingsAi" style="font-weight: 600; font-size: 0.85rem; color: var(--text);">AI Suggested Discount (%) *</label>
+                  <input type="number" id="adminBundleSettingsAi" required min="0" max="90" placeholder="20" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                  <small style="color: var(--text-muted); font-size: 0.75rem;">Discount applied for AI suggested outfits. Set to 0 to disable.</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full" style="width: 100%; padding: 12px;"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Right Column: Bundles List Sheet -->
+          <div class="admin-log-panel" style="margin: 0; min-height: 480px; width: 100%;">
+            <h3><i class="fa-solid fa-gift"></i> Configured Outfit Bundles</h3>
+            <div class="admin-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Bundle Details</th>
+                    <th>Product A</th>
+                    <th>Product B</th>
+                    <th style="width: 100px; text-align: right;">Deal Price</th>
+                    <th style="width: 80px; text-align: center;">Active</th>
+                    <th style="width: 150px; text-align: center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminBundlesTableBody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      </div> <!-- End of adminDashboardContent -->
+    </section>
+
+    <!-- Contact Us Tab -->
+    <section id="tab-contact" class="tab-view">
+      <div class="section-title text-center">
+        <h2>Contact Us</h2>
+        <p>Get in touch with Smart Collection, Jalalpur. We'd love to hear from you!</p>
+      </div>
+      <div style="max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 20px;" class="contact-grid">
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 25px; box-shadow: var(--shadow-sm);">
+          <h3 style="margin-top: 0; color: var(--primary);"><i class="fa-solid fa-paper-plane"></i> Send Us a Message</h3>
+          <form id="contactForm" onsubmit="handleContactSubmit(event)" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
+            <div class="form-group">
+              <input type="text" id="contactName" placeholder="Your Name *" required style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-body); color: var(--text);">
+            </div>
+            <div class="form-group">
+              <input type="tel" id="contactPhone" placeholder="Mobile Number *" required style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-body); color: var(--text);">
+            </div>
+            <div class="form-group">
+              <input type="email" id="contactEmail" placeholder="Email Address" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-body); color: var(--text);">
+            </div>
+            <div class="form-group">
+              <textarea id="contactMessage" placeholder="Your Query/Message *" rows="4" required style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-body); color: var(--text); resize: none;"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 700;">
+              <i class="fa-solid fa-paper-plane"></i> Send Message
+            </button>
+          </form>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 25px; box-shadow: var(--shadow-sm);">
+            <h3 style="margin-top: 0; color: var(--primary);"><i class="fa-solid fa-store"></i> Store Information</h3>
+            <p style="margin-top: 10px; font-size: 0.95rem; line-height: 1.6; color: var(--text);"><i class="fa-solid fa-location-dot" style="color: var(--primary); margin-right: 8px;"></i> <strong>Address:</strong> Near Main Chowk, Jalalpur, Saran District, Bihar - 841412</p>
+            <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text);"><i class="fa-solid fa-phone" style="color: var(--primary); margin-right: 8px;"></i> <strong>Phone:</strong> +91 7827782899</p>
+            <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text);"><i class="fa-solid fa-envelope" style="color: var(--primary); margin-right: 8px;"></i> <strong>Email:</strong> smartcollection.jalalpur@gmail.com</p>
+          </div>
+          <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 25px; box-shadow: var(--shadow-sm); flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+            <i class="fa-solid fa-map-location-dot" style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"></i>
+            <h4 style="margin: 0; font-size: 1.1rem; font-weight: 700;">Find Us on the Map</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 6px 0 15px 0;">Visit our store at the central location of Jalalpur near Main Chowk.</p>
+            <a href="https://maps.google.com/?q=Jalalpur,Saran,Bihar" target="_blank" class="btn btn-secondary btn-small" style="font-weight: 600;">
+              <i class="fa-solid fa-up-right-from-square"></i> Open in Google Maps
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Tab -->
+    <section id="tab-faq" class="tab-view">
+      <div class="section-title text-center">
+        <h2>Frequently Asked Questions</h2>
+        <p>Find answers to common questions about shopping, exchanges, and AI Stylist.</p>
+      </div>
+      <div style="max-width: 800px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+        <div class="faq-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 15px; cursor: pointer; border-radius: var(--radius-sm);" onclick="toggleFaq(this)">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--text);">
+            <span>How do I place an order?</span>
+            <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem; transition: transform 0.2s;"></i>
+          </div>
+          <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.2s ease-out; font-size: 0.9rem; color: var(--text-muted); margin-top: 0; line-height: 1.5;">
+            <p style="padding-top: 10px; margin: 0;">Add products of your desired size to the cart. Click "Confirm & Send Invoice on WhatsApp" to coordinate directly with the store owner, or choose "Pay Securely" to simulate an instant payment and order verification.</p>
+          </div>
+        </div>
+
+        <div class="faq-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 15px; cursor: pointer; border-radius: var(--radius-sm);" onclick="toggleFaq(this)">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--text);">
+            <span>What are the delivery charges?</span>
+            <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem; transition: transform 0.2s;"></i>
+          </div>
+          <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.2s ease-out; font-size: 0.9rem; color: var(--text-muted); margin-top: 0; line-height: 1.5;">
+            <p style="padding-top: 10px; margin: 0;">Delivery is absolutely FREE for all orders above ₹1000! For orders below ₹1000, a small shipping fee of ₹50 is applied.</p>
+          </div>
+        </div>
+
+        <div class="faq-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 15px; cursor: pointer; border-radius: var(--radius-sm);" onclick="toggleFaq(this)">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--text);">
+            <span>Can I try clothes virtually before buying?</span>
+            <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem; transition: transform 0.2s;"></i>
+          </div>
+          <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.2s ease-out; font-size: 0.9rem; color: var(--text-muted); margin-top: 0; line-height: 1.5;">
+            <p style="padding-top: 10px; margin: 0;">Yes! Go to the "AI Stylist" tab on the storefront. You can choose a model avatar or take a live picture using your device webcam, and drag and resize any clothing catalog item over your picture to see the perfect fit!</p>
+          </div>
+        </div>
+
+        <div class="faq-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 15px; cursor: pointer; border-radius: var(--radius-sm);" onclick="toggleFaq(this)">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--text);">
+            <span>How do I exchange an item?</span>
+            <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem; transition: transform 0.2s;"></i>
+          </div>
+          <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.2s ease-out; font-size: 0.9rem; color: var(--text-muted); margin-top: 0; line-height: 1.5;">
+            <p style="padding-top: 10px; margin: 0;">Exchanges are allowed within a 7-day window once the order status is updated to "Delivered". Go to your "Order History" tab, click the "Exchange Item" button on your delivered order card, select the item and the sizing/color reason, and submit it.</p>
+          </div>
+        </div>
+
+        <div class="faq-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 15px; cursor: pointer; border-radius: var(--radius-sm);" onclick="toggleFaq(this)">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--text);">
+            <span>How do loyalty points work?</span>
+            <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem; transition: transform 0.2s;"></i>
+          </div>
+          <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.2s ease-out; font-size: 0.9rem; color: var(--text-muted); margin-top: 0; line-height: 1.5;">
+            <p style="padding-top: 10px; margin: 0;">You earn 1 point for every ₹10 spent on the final checkout subtotal. When your points balance is 200 points or more, you can check the "Loyalty Points Discount" box during checkout to redeem them for direct discounts at a rate of 1 point = ₹0.50.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Return Policy Tab -->
+    <section id="tab-returns" class="tab-view">
+      <div class="section-title text-center">
+        <h2>Return & Exchange Policy</h2>
+        <p>Smart Collection, Jalalpur strives for 100% customer satisfaction.</p>
+      </div>
+      <div style="max-width: 800px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 30px; box-shadow: var(--shadow-sm); line-height: 1.6; color: var(--text);">
+        <h3 style="margin-top: 0; color: var(--primary);"><i class="fa-solid fa-rotate"></i> 7-Day Sizing & Color Exchange</h3>
+        <p>We offer a hassle-free **7-day exchange window** for size adjustments, defective garments, or color switches once an order is marked as **Delivered**.</p>
+        
+        <h4 style="margin-top: 20px; font-weight: 700; color: var(--text);"><i class="fa-solid fa-clipboard-check"></i> Terms & Conditions:</h4>
+        <ul style="padding-left: 20px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
+          <li>All garments submitted for exchange must be **unworn, unwashed, and undamaged** with original brand tags attached.</li>
+          <li>Accompany the return package with a printed copy of the invoice (which can be downloaded as a PDF from your Order History tab).</li>
+          <li>For self-pickup orders, please bring the garment directly to our store in Jalalpur Chowk for an instant exchange.</li>
+          <li>For delivery orders, once you submit the online exchange request, our delivery partner will coordinate the return pick-up and deliver the new sizing within 48-72 hours upon administrator approval.</li>
+        </ul>
+
+        <h4 style="margin-top: 20px; font-weight: 700; color: var(--text);"><i class="fa-solid fa-circle-info"></i> Important Notice:</h4>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">Decisions made by the Store Administrator regarding return approvals or rejections are tracked and logged. The administrator is required to provide clear feedback reasons on any rejected exchange requests, which will be visible inside your Customer Profile panel.</p>
+      </div>
+    </section>
+
+    <!-- Privacy Policy Tab -->
+    <section id="tab-privacy" class="tab-view">
+      <div class="section-title text-center">
+        <h2>Privacy & Data Security Policy</h2>
+        <p>Your trust and privacy are our top priorities at Smart Collection.</p>
+      </div>
+      <div style="max-width: 800px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 30px; box-shadow: var(--shadow-sm); line-height: 1.6; color: var(--text);">
+        <h3 style="margin-top: 0; color: var(--primary);"><i class="fa-solid fa-shield-halved"></i> Data Protection Standards</h3>
+        <p>This policy details how Smart Collection, Jalalpur collects, stores, and protects customer data for checkout and account rewards:</p>
+
+        <h4 style="margin-top: 20px; font-weight: 700; color: var(--text);">1. Information We Collect</h4>
+        <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: 4px;">We collect basic customer information when you register via OTP login, Google Sign-in, or complete a checkout order: Mobile phone number, profile name, delivery address line, wishlist bookmarks, and purchase order logs.</p>
+
+        <h4 style="margin-top: 20px; font-weight: 700; color: var(--text);">2. How We Use Your Data</h4>
+        <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: 4px;">Your contact number and shipping address are strictly used to fulfill your purchase deliveries and calculate loyalty cashback points. We do not use third-party advertisements or sell customer databases under any circumstances.</p>
+
+        <h4 style="margin-top: 20px; font-weight: 700; color: var(--text);">3. Storage and Safety</h4>
+        <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: 4px;">All profiles, orders, and review comments are stored securely in a MongoDB Atlas database cluster with sparse-index encryption, ensuring your personal contact details remain private and safe.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Sliding Shopping Cart Drawer -->
+  <div class="cart-drawer-overlay" id="cartDrawerOverlay" onclick="toggleCart(false)"></div>
+  <div class="cart-drawer" id="cartDrawer">
+    <div class="cart-header">
+      <h3>Your Cart (<span id="cartDrawerCount">0</span>)</h3>
+      <button class="close-cart-btn" onclick="toggleCart(false)"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div class="cart-items-container" id="cartItemsContainer">
+      <!-- Loaded dynamically -->
+    </div>
+
+    <div class="cart-footer">
+      <div class="price-row">
+        <span>Subtotal</span>
+        <span class="total-price" id="cartSubtotal">₹0</span>
+      </div>
+      <div class="price-row" id="cartDeliveryFeeRow" style="display: none; margin-top: 4px; font-size: 0.9rem; color: var(--text-muted);">
+        <span>Delivery Fee</span>
+        <span id="cartDeliveryFee" style="font-weight: 600;">₹0</span>
+      </div>
+      <div class="price-row" id="cartGrandTotalRow" style="display: none; margin-top: 6px; border-top: 1px solid var(--border); padding-top: 6px;">
+        <span style="font-weight: 700;">Total</span>
+        <span id="cartGrandTotal" style="font-weight: 800; font-size: 1.15rem; color: var(--primary);">₹0</span>
+      </div>
+      
+      <!-- Checkout Form -->
+      <div class="checkout-form-container">
+        <h4>Delivery & Order Details</h4>
+        <div class="form-group">
+          <input type="text" id="chkName" placeholder="Full Name *" required>
+        </div>
+        <div class="form-group">
+          <input type="tel" id="chkPhone" placeholder="Mobile Number *" required>
+        </div>
+        <div class="form-group">
+          <select id="chkDeliveryMethod" onchange="toggleAddressField()" class="styled-select">
+            <option value="pickup">Self Pickup at Jalalpur Shop (Free)</option>
+            <option value="delivery">Home Delivery (Free above ₹1000, else ₹50)</option>
+          </select>
+        </div>
+        <div class="form-group" id="savedAddressesContainer" style="display: none; margin-top: 10px;">
+          <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px; font-weight: 600;">Saved Shipping Addresses:</label>
+          <select id="chkSavedAddress" onchange="useSavedAddress(this.value)" class="styled-select">
+            <!-- Rendered dynamically -->
+          </select>
+        </div>
+        <div class="form-group" id="addressFieldContainer" style="display: none;">
+          <textarea id="chkAddress" rows="2" placeholder="Delivery Address in Jalalpur (PIN: 841412) *"></textarea>
+        </div>
+        
+        <!-- Loyalty points redemption -->
+        <div class="form-group" id="loyaltyRedeemContainer" style="display: none; border: 1px dashed var(--primary); padding: 12px; border-radius: var(--radius-md); margin-top: 15px; background: rgba(90, 82, 237, 0.03);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span style="font-size: 0.85rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 4px;"><i class="fa-solid fa-coins" style="color: #f59f00;"></i> Loyalty Points Wallet</span>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin: 3px 0 0 0;" id="loyaltyBalanceText">0 points available (Worth ₹0)</p>
+            </div>
+            <label class="toggle-switch-label" style="margin: 0;">
+              <input type="checkbox" id="chkRedeemLoyalty" onchange="toggleLoyaltyRedemption()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div id="loyaltyDiscountAppliedRow" style="display: none; justify-content: space-between; font-size: 0.8rem; margin-top: 8px; color: #2ec4b6; font-weight: 700;">
+            <span>Points Discount Applied:</span>
+            <span id="loyaltyDiscountValue">-₹0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="checkout-actions">
+        <button class="btn btn-whatsapp btn-full" onclick="checkoutWhatsApp()">
+          <i class="fa-brands fa-whatsapp"></i> Confirm & Send Invoice on WhatsApp
+        </button>
+        <button class="btn btn-primary btn-full" onclick="openPaymentModal()">
+          <i class="fa-solid fa-credit-card"></i> Pay Securely Online / At Shop
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPI / Payment Simulator Modal -->
+  <div class="modal-backdrop" id="paymentModalBackdrop">
+    <div class="modal-container text-center">
+      <div class="modal-header">
+        <h3>Simulated Shop Payment</h3>
+        <button class="close-modal-btn" onclick="closePaymentModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="upi-payment-sim">
+          <p class="payment-instruction">Scan this UPI QR code using any payment app (Google Pay, PhonePe, Paytm) to complete your ready-made clothes purchase directly to Smart Collection.</p>
+          
+          <!-- Dynamic UPI QR Code -->
+          <div class="qr-code-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; margin: 20px 0;">
+            <div id="upiQrCodeContainer" style="padding: 12px; background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); width: max-content; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+              <div style="width: 200px; height: 200px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+              </div>
+            </div>
+            <div class="upi-logo" id="upiModalAddress" style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); font-family: monospace;">UPI ID: sshushant074@oksbi</div>
+          </div>
+          
+          <div class="price-badge">
+            Amount: <span id="paymentModalPrice">₹0</span>
+          </div>
+
+          <!-- Proof of Payment Fields -->
+          <div class="payment-verification-box" style="margin-top: 15px; margin-bottom: 15px; padding: 15px; background: rgba(90, 82, 237, 0.05); border: 1px dashed rgba(90, 82, 237, 0.3); border-radius: var(--radius-md); text-align: left;">
+            <h4 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 10px; color: var(--text); display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> Payment Verification
+            </h4>
+            
+            <div class="form-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px;">
+              <label for="paymentTxnId" style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); display: block;">UPI Transaction ID / UTR (12 Digits)</label>
+              <input type="text" id="paymentTxnId" placeholder="Enter 12-digit UTR/Txn ID" style="width: 100%; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-card); color: var(--text); font-size: 0.85rem;" maxlength="12" oninput="this.value = this.value.replace(/\D/g, '')">
+            </div>
+            
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); display: block;">OR Upload Payment Screenshot</label>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="paymentScreenshotInput" class="btn btn-secondary btn-small" style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 0.8rem; background: var(--bg-accent); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                  <i class="fa-solid fa-camera"></i> Select Photo
+                </label>
+                <input type="file" id="paymentScreenshotInput" accept="image/*" style="display: none;" onchange="handlePaymentScreenshotUpload(event)">
+                <span id="paymentScreenshotFilename" style="font-size: 0.75rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;">No file selected</span>
+              </div>
+              <div id="paymentScreenshotPreviewContainer" style="display: none; margin-top: 10px; text-align: center;">
+                <img id="paymentScreenshotPreview" src="" alt="Screenshot Preview" style="max-width: 120px; max-height: 120px; object-fit: contain; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px; background: white;">
+                <button type="button" class="btn btn-secondary btn-small" style="color: var(--danger); border-color: transparent; padding: 2px 6px; font-size: 0.7rem; margin-top: 4px; display: block; margin-left: auto; margin-right: auto;" onclick="clearPaymentScreenshot()">Remove</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="payment-steps">
+            <div class="p-step"><i class="fa-solid fa-mobile-screen-button"></i> 1. Scan QR Code</div>
+            <div class="p-step"><i class="fa-solid fa-shield-halved"></i> 2. Complete payment securely</div>
+            <div class="p-step"><i class="fa-solid fa-circle-check"></i> 3. Click "Complete Order" below</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closePaymentModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="simulatePaymentSuccess()">Complete Order (Simulate Success)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review Modal -->
+  <div class="modal-backdrop" id="reviewModalBackdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Write a Review</h3>
+        <button class="close-modal-btn" onclick="closeReviewModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="reviewItemId">
+        <input type="hidden" id="reviewOrderId">
+        
+        <div class="form-group text-center">
+          <label>Rate this Product:</label>
+          <div class="star-rating-input">
+            <button type="button" class="star-btn" onclick="setStarRating(1)"><i class="fa-solid fa-star"></i></button>
+            <button type="button" class="star-btn" onclick="setStarRating(2)"><i class="fa-solid fa-star"></i></button>
+            <button type="button" class="star-btn" onclick="setStarRating(3)"><i class="fa-solid fa-star"></i></button>
+            <button type="button" class="star-btn" onclick="setStarRating(4)"><i class="fa-solid fa-star"></i></button>
+            <button type="button" class="star-btn" onclick="setStarRating(5)"><i class="fa-solid fa-star"></i></button>
+          </div>
+          <span id="starRatingValueText">Select Rating</span>
+        </div>
+        
+        <div class="form-group">
+          <label for="reviewComment">Your Feedback & Review:</label>
+          <textarea id="reviewComment" rows="4" placeholder="How does the fabric feel? Is the sizing correct? Let us know!" required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeReviewModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel Order Modal -->
+  <div class="modal-backdrop" id="cancelOrderModalBackdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Cancel Order</h3>
+        <button class="close-modal-btn" onclick="closeCancelOrderModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="cancelOrderId">
+        <input type="hidden" id="cancelOrderCode">
+        
+        <p style="margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem;">
+          Are you sure you want to cancel order <strong id="cancelOrderCodeText">SC-XXXXXX</strong>? This action cannot be undone. Any loyalty points redeemed will be refunded to your balance.
+        </p>
+
+        <div class="form-group">
+          <label for="cancelReasonSelect">Reason for Cancellation:</label>
+          <select id="cancelReasonSelect" onchange="toggleCancelReasonOther()" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); margin-bottom: 12px;">
+            <option value="Changed my mind">Changed my mind</option>
+            <option value="Found a better price elsewhere">Found a better price elsewhere</option>
+            <option value="Incorrect sizing/color selected">Incorrect sizing/color selected</option>
+            <option value="Delivery time is too long">Delivery time is too long</option>
+            <option value="Other">Other (Please specify)</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="cancelReasonOtherContainer" style="display: none;">
+          <label for="cancelReasonOther">Please specify:</label>
+          <textarea id="cancelReasonOther" rows="3" placeholder="Enter cancellation reason..." style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); resize: vertical;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeCancelOrderModal()">Keep Order</button>
+        <button class="btn btn-danger" onclick="submitCancelOrder()">Cancel Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exchange Request Modal -->
+  <div class="modal-backdrop" id="exchangeModalBackdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Exchange Request</h3>
+        <button class="close-modal-btn" onclick="closeExchangeModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="exchangeItemId">
+        <input type="hidden" id="exchangeOrderId">
+        
+        <div class="product-exchange-preview" id="exchangeProductPreview">
+          <!-- Item details loaded dynamically -->
+        </div>
+
+        <div class="form-group">
+          <label for="exchangeReason">Reason for Exchange *</label>
+          <select id="exchangeReason" class="styled-select" required onchange="updateExchangeSuggestions()">
+            <option value="sizing-too-small">Too Small</option>
+            <option value="sizing-too-large">Too Large</option>
+            <option value="color-preference">Color Different</option>
+            <option value="defective">Defective / Damaged</option>
+          </select>
+        </div>
+
+        <div id="exchangeSuggestionsContainer" style="display: none; margin-top: 15px; margin-bottom: 15px; padding: 15px; border-radius: var(--radius-sm); border: 1px dashed var(--primary); background: rgba(90, 82, 237, 0.03);">
+          <span style="font-size: 0.85rem; font-weight: 700; display: block; margin-bottom: 10px; color: var(--primary);"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Instantly Suggested Replacements</span>
+          <div id="exchangeSuggestionsList" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Suggested options loaded dynamically -->
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="exchangeDetails">Exchange details (Specify target size/color/details) *</label>
+          <textarea id="exchangeDetails" rows="3" placeholder="e.g. Please exchange for Men's Classic Linen Shirt in Blue color, size Large" required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeExchangeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitExchangeRequest()">Submit Request</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Login & Register Modal (Real Auth: OTP & Google) -->
+  <div class="modal-backdrop" id="customerAuthModalBackdrop">
+    <div class="modal-container" style="max-width: 420px; width: 90%;">
+      <div class="modal-header">
+        <h3 id="authModalTitle"><i class="fa-solid fa-user-lock"></i> Smart Authentication</h3>
+        <button class="close-modal-btn" onclick="closeAuthModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; text-align: center;">Sign in securely via OTP or Google to manage rewards, refer friends, and checkout.</p>
+        
+        <!-- Step 1: Request OTP -->
+        <div id="otpStep1Container">
+          <div class="form-group" style="margin-bottom: 15px;">
+            <label for="authPhone" style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Mobile Number *</label>
+            <input type="tel" id="authPhone" placeholder="Enter 10-Digit Mobile Number" required style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-card); color: var(--text);">
+          </div>
+          <button class="btn btn-primary btn-full" onclick="requestOtpCode()" style="width: 100%;">
+            <i class="fa-solid fa-paper-plane"></i> Send OTP Code
+          </button>
+        </div>
+
+        <!-- Step 2: Verify OTP (Hidden initially) -->
+        <div id="otpStep2Container" style="display: none;">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label for="authOtp" style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Enter 6-Digit OTP *</label>
+            <input type="text" id="authOtp" placeholder="Enter 6-digit OTP code" maxlength="6" required style="width: 100%; padding: 10px; font-weight: 700; text-align: center; letter-spacing: 4px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-card); color: var(--text);">
+          </div>
+          
+          <!-- New user sign-up fields (Only shown if user doesn't exist, toggled via JS) -->
+          <div id="newUserFieldsContainer" style="display: none; border-top: 1px dashed var(--border); padding-top: 12px; margin-top: 12px;">
+            <p style="font-size: 0.80rem; color: #ff9f43; margin-bottom: 10px; font-weight: 600;"><i class="fa-solid fa-user-plus"></i> New Account Profile Setup:</p>
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="authName" style="font-weight: 600; font-size: 0.80rem; display: block; margin-bottom: 4px;">Full Name</label>
+              <input type="text" id="authName" placeholder="Enter your full name" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-card); color: var(--text);">
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="authReferralCode" style="font-weight: 600; font-size: 0.80rem; display: block; margin-bottom: 4px;">Referral Code (Optional)</label>
+              <input type="text" id="authReferralCode" placeholder="e.g. SC-XXXXXX" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-card); color: var(--text);">
+            </div>
+          </div>
+
+          <button class="btn btn-success btn-full" onclick="verifyOtpCode()" style="margin-top: 15px; width: 100%;">
+            <i class="fa-solid fa-circle-check"></i> Verify & Authenticate
+          </button>
+          <button class="btn btn-secondary btn-full btn-small" onclick="resetOtpRequest()" style="margin-top: 10px; border-color: transparent; width: 100%;">
+            Change Phone Number
+          </button>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: center; margin: 20px 0 15px 0; gap: 10px;">
+          <div style="flex: 1; height: 1px; background: var(--border);"></div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">or continue with</span>
+          <div style="flex: 1; height: 1px; background: var(--border);"></div>
+        </div>
+
+        <!-- Google Sign-In Button -->
+        <div id="googleBtnContainer" style="display: flex; justify-content: center; width: 100%;"></div>
+        <div style="text-align: center; margin-top: 15px; display: flex; flex-direction: column; gap: 8px; align-items: center;">
+          <a href="#" onclick="mockGoogleSignIn(event)" style="font-size: 0.8rem; color: var(--primary); text-decoration: underline; font-weight: 500;">
+            <i class="fa-brands fa-google"></i> Testing: Mock Google Login
+          </a>
+          <a href="#" onclick="openAdminLogin(event)" style="font-size: 0.75rem; color: var(--text-muted); text-decoration: none; font-weight: 600; margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 10px; width: 100%;">
+            <i class="fa-solid fa-user-gear"></i> Admin Login (Password)
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Customer Profile & Loyalty Modal -->
+  <div class="modal-backdrop" id="customerProfileModalBackdrop">
+    <div class="modal-container" style="max-width: 580px; width: 90%;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-circle-user"></i> Customer Membership Portal</h3>
+        <button class="close-modal-btn" onclick="closeProfileModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto; padding: 20px;">
+        <!-- Profile details -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; flex-wrap: wrap; gap: 12px;">
+          <div style="flex: 1; min-width: 200px;">
+            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; font-weight: 600;">Account Profile:</label>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+              <input type="text" id="profileName" value="" placeholder="Set Profile Name" style="font-weight: 700; font-size: 1.1rem; border: 1px solid transparent; background: transparent; padding: 2px 5px; width: 140px; color: var(--text);" onfocus="this.style.borderColor='var(--border)'; this.style.background='var(--bg-accent)';" onblur="this.style.borderColor='transparent'; this.style.background='transparent';">
+              <button class="btn btn-secondary btn-small" onclick="saveProfileName()" style="padding: 2px 6px; font-size: 0.7rem; border-radius: 4px;">Save Name</button>
+            </div>
+            <span style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-top: 4px;" id="profilePhoneDisplay">Mobile: 9876543210</span>
+          </div>
+          <div style="text-align: right; background: rgba(245, 159, 0, 0.08); border: 1px solid rgba(245, 159, 0, 0.25); padding: 10px; border-radius: var(--radius-sm); min-width: 160px;">
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; font-weight: 600; text-transform: uppercase;">Loyalty Points Balance</span>
+            <strong style="color: #f59f00; font-size: 1.4rem; display: block; margin-top: 2px;" id="profileLoyaltyPoints">🪙 0 Points</strong>
+            <span style="font-size: 0.75rem; color: #2ec4b6; font-weight: 700; display: block; margin-top: 2px;" id="profileLoyaltyValue">Worth ₹0.00 Discount</span>
+          </div>
+        </div>
+
+        <!-- Referral program -->
+        <div style="background: rgba(90, 82, 237, 0.05); border: 1px solid rgba(90, 82, 237, 0.15); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 20px;">
+          <h4 style="margin: 0 0 6px 0; font-size: 0.9rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-gift"></i> Share & Earn Rewards Program
+          </h4>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0 0 10px 0;">Refer friends to Smart Collection! Your friends get 50 points upon sign-up, and you get 100 points when they complete their first order.</p>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 180px; display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-body); overflow: hidden;">
+              <span style="background: var(--bg-accent); font-size: 0.75rem; font-weight: 700; padding: 8px 10px; border-right: 1px solid var(--border); display: flex; align-items: center; color: var(--text);">CODE</span>
+              <span id="profileReferralCodeDisplay" style="font-family: monospace; font-weight: 700; font-size: 0.85rem; padding: 8px 10px; display: flex; align-items: center; color: var(--primary);">SC-XXXXXX</span>
+            </div>
+            <button class="btn btn-primary btn-small" onclick="copyReferralLink()" style="padding: 8px 15px;">
+              <i class="fa-solid fa-copy"></i> Copy Link
+            </button>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;" id="profileReferralStats">
+            Referred Users Signed Up: <strong style="color: var(--text);" id="profileReferralsCount">0</strong>
+          </div>
+        </div>
+
+        <!-- Saved Addresses -->
+        <div>
+          <h4 style="margin: 0 0 10px 0; font-size: 0.9rem; font-weight: 700; color: var(--text);"><i class="fa-solid fa-location-dot"></i> Saved Shipping Addresses</h4>
+          
+          <div id="profileAddressesList" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
+            <!-- Address items loaded dynamically -->
+          </div>
+
+          <!-- Add Address Form -->
+          <div style="background-color: var(--bg-accent); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+            <span style="font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 6px; color: var(--text);">Add New Address</span>
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+              <input type="text" id="newAddressLabel" placeholder="Address Label (e.g. Home, Work)" style="flex: 1; padding: 6px; font-size: 0.8rem;">
+            </div>
+            <div style="display: flex; gap: 8px; align-items: flex-end;">
+              <textarea id="newAddressText" placeholder="Full Delivery Address in Jalalpur..." rows="2" style="flex: 1; padding: 6px; font-size: 0.8rem; resize: none;"></textarea>
+              <button class="btn btn-secondary" onclick="addSavedAddress()" style="padding: 6px 12px; font-size: 0.8rem; height: 38px;">Add Address</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between;">
+        <button class="btn btn-secondary" style="color: #e71d36; border-color: rgba(231,29,54,0.25);" onclick="handleCustomerLogout()">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
+        <button class="btn btn-primary" onclick="closeProfileModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Purchase History Modal -->
+  <div class="modal-backdrop" id="customerHistoryModalBackdrop">
+    <div class="modal-container" style="max-width: 800px; width: 90%;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> Customer Purchase History</h3>
+        <button class="close-modal-btn" onclick="closeCustomerHistoryModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto; padding: 20px;">
+        <div id="customerHistoryMeta" style="background-color: var(--bg-accent); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border: 1px solid var(--border);">
+          <div>
+            <strong style="font-size: 1.15rem; color: var(--text);" id="histCustomerName">Customer Name</strong><br>
+            <span style="color: var(--text-muted); font-size: 0.9rem;" id="histCustomerPhone">Phone: 1234567890</span>
+          </div>
+          <div style="text-align: right; font-size: 0.9rem;">
+            <strong>Total Spend:</strong> <span style="color: var(--primary); font-weight: 700; font-size: 1.1rem;" id="histTotalSpend">₹0</span><br>
+            <strong>Total Orders:</strong> <span id="histTotalOrders" style="font-weight: 700;">0</span>
+          </div>
+        </div>
+        <div id="customerHistoryOrdersList">
+          <!-- Dynamic rendering of customer orders -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeCustomerHistoryModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Details & Image Slider Modal -->
+  <div class="modal-backdrop" id="productModalBackdrop">
+    <div class="modal-container product-modal-container">
+      <div class="modal-header">
+        <h3 id="productModalTitle">Product Details</h3>
+        <button class="close-modal-btn" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body product-modal-body">
+        <div class="product-modal-gallery">
+          <div class="product-modal-slider">
+            <button class="slider-nav-btn prev" onclick="navigateProductSlider(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+            <img id="productModalMainImg" src="" alt="Active Product View" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?auto=format&fit=crop&q=80&w=400'">
+            <button class="slider-nav-btn next" onclick="navigateProductSlider(1)"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+          <div class="product-modal-thumbnails" id="productModalThumbs">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+        <div class="product-modal-info">
+          <div class="product-modal-meta">
+            <span class="badge" id="productModalBadge">Category</span>
+            <span class="badge" id="productModalEventBadge" style="display: none; background-color: var(--primary); margin-left: 6px;">Event</span>
+            <span class="stock-status" id="productModalStock">In Stock</span>
+          </div>
+          <h2 id="productModalName">Product Name</h2>
+          <p class="product-modal-desc" id="productModalDesc">Product description.</p>
+          
+          <div class="product-modal-sizes-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h4 style="margin: 0;">Select Size:</h4>
+              <button type="button" class="size-advisor-toggle-btn" onclick="toggleSizeAdvisor()" style="background: none; border: none; color: var(--primary); font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 0;">
+                <i class="fa-solid fa-ruler-horizontal"></i> Find Your Fit
+              </button>
+            </div>
+            <div class="sizes-list" id="productModalSizes" style="margin-bottom: 10px;">
+              <!-- Rendered dynamically -->
+            </div>
+
+            <!-- Size Advisor Form Container (Hidden by default) -->
+            <div id="sizeAdvisorContainer" style="display: none; border: 1px dashed var(--primary); padding: 12px; border-radius: var(--radius-sm); margin-top: 10px; background: rgba(90, 82, 237, 0.02); box-shadow: var(--shadow);">
+              <span style="font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px; color: var(--text);"><i class="fa-solid fa-calculator" style="color: var(--primary);"></i> Size Advisor Calculator</span>
+              <div class="form-row" style="grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; display: grid;">
+                <div class="form-group" style="margin: 0;">
+                  <label for="advisorAge" style="font-size: 0.7rem; font-weight: 600; display: block; margin-bottom: 2px;">Age (Years)</label>
+                  <input type="number" id="advisorAge" min="1" max="100" placeholder="e.g. 5" style="width: 100%; padding: 6px; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text);">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label for="advisorHeight" style="font-size: 0.7rem; font-weight: 600; display: block; margin-bottom: 2px;">Height (cm)</label>
+                  <input type="number" id="advisorHeight" min="50" max="250" placeholder="e.g. 110" style="width: 100%; padding: 6px; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text);">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label for="advisorWeight" style="font-size: 0.7rem; font-weight: 600; display: block; margin-bottom: 2px;">Weight (kg)</label>
+                  <input type="number" id="advisorWeight" min="5" max="200" placeholder="e.g. 20" style="width: 100%; padding: 6px; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text);">
+                </div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-small btn-full" onclick="calculateRecommendedSize()" style="padding: 6px; font-size: 0.75rem; border-radius: 4px;">Suggest Size</button>
+              <div id="advisorResult" style="display: none; font-size: 0.8rem; font-weight: 700; margin-top: 10px; text-align: center; color: #2ec4b6; background: rgba(46,196,182,0.08); padding: 6px; border-radius: 4px; border: 1px solid rgba(46,196,182,0.15);">
+                <!-- Result display -->
+              </div>
+            </div>
+          </div>
+          
+          <div class="product-modal-purchase">
+            <span class="product-modal-price" id="productModalPrice">₹0</span>
+            <div style="display: flex; gap: 10px; width: 100%;">
+              <button class="btn btn-primary" id="productModalAddToCartBtn" style="flex: 2;">Add to Cart <i class="fa-solid fa-cart-plus"></i></button>
+              <button class="btn btn-secondary" id="productModalWishlistBtn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; padding: 12px;">
+                <i class="fa-regular fa-heart"></i> Wishlist
+              </button>
+            </div>
+            <div style="display: flex; gap: 10px; width: 100%; margin-top: 8px;">
+              <button class="btn btn-secondary" onclick="toggleShareQrCode()" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; padding: 10px; border-color: rgba(90, 82, 237, 0.25); color: var(--primary);">
+                <i class="fa-solid fa-qrcode"></i> Share QR Code
+              </button>
+            </div>
+            <div id="productShareQrContainer" style="display: none; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); margin-top: 10px;">
+              <div id="productShareQrImage" style="padding: 8px; background: white; border-radius: var(--radius-sm); border: 1px solid #ddd; width: max-content; height: max-content;"></div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); text-align: center;">Scan to open this product page on any device</span>
+            </div>
+          </div>
+
+          <!-- Product Modal Customer Reviews Section -->
+          <div class="product-modal-reviews-section" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
+            <h4 style="margin-bottom: 10px; font-size: 0.95rem; font-weight: 700; color: var(--text);"><i class="fa-solid fa-comments"></i> Customer Reviews</h4>
+            <div id="productModalReviewsList" style="max-height: 150px; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 8px;">
+              <!-- Loaded dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- AI Fashion Recommendations Section -->
+      <div class="product-modal-recommendations" style="padding: 20px 24px; border-top: 1px solid var(--border); background: var(--bg-body-dark, rgba(0,0,0,0.02));">
+        <h4 style="margin-bottom: 12px; font-size: 0.95rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> AI Fashion Recommendations
+        </h4>
+        <div id="productRecommendationsList" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;">
+          <!-- Dynamically loaded related products -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Outfit Bundle Sizes Modal -->
+  <div class="modal-backdrop" id="bundleSizesModalBackdrop">
+    <div class="modal-container" style="max-width: 480px; width: 90%;">
+
+      <div class="modal-header">
+        <h3 id="bundleModalTitle">Select Bundle Sizes</h3>
+        <button class="close-modal-btn" onclick="closeBundleSizesModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 25px; text-align: left;">
+        <p style="margin: 0 0 20px 0; font-size: 0.88rem; color: var(--text-muted);">Please select sizes for the items in this outfit bundle before adding it to your cart.</p>
+        
+        <form id="bundleSizesForm" onsubmit="confirmBundlePurchase(event)" style="display: flex; flex-direction: column; gap: 20px;">
+          <!-- Item 1 Details & Size Selector -->
+          <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-sm); border: 1px solid var(--border); display: flex; gap: 15px; align-items: center;">
+            <img id="bundleModalImgA" src="" style="width: 70px; height: 70px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+            <div style="flex: 1;">
+              <h4 id="bundleModalNameA" style="margin: 0 0 6px 0; font-size: 0.95rem; font-weight: 700; color: var(--text);">Item A</h4>
+              <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+                <label for="bundleSizeA" style="font-weight: 600; font-size: 0.78rem; color: var(--text-muted);">Size *</label>
+                <select id="bundleSizeA" required style="width: 100%; padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Item 2 Details & Size Selector -->
+          <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-sm); border: 1px solid var(--border); display: flex; gap: 15px; align-items: center;">
+            <img id="bundleModalImgB" src="" style="width: 70px; height: 70px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+            <div style="flex: 1;">
+              <h4 id="bundleModalNameB" style="margin: 0 0 6px 0; font-size: 0.95rem; font-weight: 700; color: var(--text);">Item B</h4>
+              <div class="form-group" style="display: flex; flex-direction: column; gap: 4px;">
+                <label for="bundleSizeB" style="font-weight: 600; font-size: 0.78rem; color: var(--text-muted);">Size *</label>
+                <select id="bundleSizeB" required style="width: 100%; padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 10px;">
+            <button type="submit" class="btn btn-primary btn-large btn-full" style="width: 100%; padding: 12px; font-weight: bold;"><i class="fa-solid fa-cart-plus"></i> Add Bundle to Cart</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Proof Viewer Modal -->
+  <div class="modal-backdrop" id="paymentProofModalBackdrop">
+    <div class="modal-container" style="max-width: 500px; width: 90%;">
+      <div class="modal-header">
+        <h3>Payment Proof Verification</h3>
+        <button class="close-modal-btn" onclick="closePaymentProofModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body text-center" style="padding: 20px;">
+        <div id="paymentProofInfo" style="margin-bottom: 15px; font-size: 0.9rem; text-align: left; background: var(--bg-accent); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <!-- Dynamic details -->
+        </div>
+        <div id="paymentProofImageContainer" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; background: #fff; display: flex; align-items: center; justify-content: center;">
+          <img id="paymentProofImage" src="" alt="Payment Screenshot" style="max-width: 100%; height: auto; object-fit: contain;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closePaymentProofModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="main-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col">
+        <h3>Smart Collection</h3>
+        <p>Premium ready-made clothing hub for men, girls, and children in Saran Saran, Jalalpur, Bihar.</p>
+        <div class="footer-socials">
+          <a href="https://wa.me/917827782899" target="_blank" class="social-icon whatsapp-color"><i class="fa-brands fa-whatsapp"></i></a>
+          <a href="#" class="social-icon"><i class="fa-brands fa-facebook"></i></a>
+          <a href="#" class="social-icon"><i class="fa-brands fa-instagram"></i></a>
+        </div>
+      </div>
+      
+      <div class="footer-col links-col">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="#" onclick="showTab('home')">Home</a></li>
+          <li><a href="#" onclick="showTab('shop')">Browse Shop</a></li>
+          <li><a href="#" onclick="showTab('ai-stylist')">AI Virtual Try-On</a></li>
+          <li><a href="#" onclick="showTab('history')">Order History</a></li>
+          <li><a href="#" onclick="showTab('admin')">Admin Panel</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col links-col">
+        <h4>Customer Support</h4>
+        <ul>
+          <li><a href="#" onclick="showTab('contact')">Contact Us</a></li>
+          <li><a href="#" onclick="showTab('faq')">FAQ Page</a></li>
+          <li><a href="#" onclick="showTab('returns')">Return Policy</a></li>
+          <li><a href="#" onclick="showTab('privacy')">Privacy Policy</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col contact-col">
+        <h4>Store Location</h4>
+        <p><i class="fa-solid fa-location-dot"></i> Near Main Chowk, Jalalpur,<br>Saran District, Bihar - 841412</p>
+        <p><i class="fa-solid fa-phone"></i> Mobile: +91 7827782899</p>
+        <p><i class="fa-solid fa-envelope"></i> Email: smartcollection.jalalpur@gmail.com</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Smart Collection Jalalpur. All Rights Reserved. Built with 💖 for premium fashion.</p>
+    </div>
+  </footer>
+
+  <!-- Floating Cart Wrapper (Blinkit-style) -->
+  <div id="floatingCartWrapper" class="floating-cart-wrapper">
+    <div id="floatingDeliveryBanner" class="floating-delivery-banner">
+      <div class="delivery-banner-left">
+        <span class="delivery-check-icon"><i class="fa-solid fa-circle-check"></i></span>
+        <div class="delivery-banner-text">
+          <span class="delivery-banner-title">Yay! You got FREE Delivery</span>
+          <span class="delivery-banner-subtitle">No coupon needed <i class="fa-solid fa-chevron-right" style="font-size: 0.6rem; margin-left: 2px;"></i></span>
+        </div>
+      </div>
+      <button class="delivery-banner-close" onclick="closeDeliveryBanner(event)"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div id="floatingCartBar" class="floating-cart-bar" onclick="toggleCart(true)">
+      <div class="cart-bar-left">
+        <div class="cart-item-thumbnails" id="floatingCartThumbnails">
+          <!-- Dynamically populated overlapping thumbnails -->
+        </div>
+        <div class="cart-bar-text">
+          <div class="cart-bar-title">View cart</div>
+          <div id="floatingCartSummary" class="cart-bar-subtitle">0 Items • ₹0</div>
+        </div>
+      </div>
+      <div class="cart-bar-right">
+        <span class="view-cart-chevron"><i class="fa-solid fa-chevron-right"></i></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Menu Drawer & Overlay -->
+  <div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="toggleMobileMenu(false)"></div>
+  <div class="mobile-menu-drawer" id="mobileMenuDrawer">
+    <div class="drawer-header">
+      <div class="logo-container">
+        <div class="logo-icon" style="background: var(--primary-light); color: var(--primary); border-radius: var(--radius-sm); width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 1rem;"><i class="fa-solid fa-shirt"></i></div>
+        <div class="logo-text" style="display: flex; flex-direction: column;">
+          <span class="logo-title" style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1rem; color: var(--text);">Smart Collection</span>
+          <span class="logo-subtitle" style="font-size: 0.65rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px;">Ready Made Hub</span>
+        </div>
+      </div>
+      <button class="close-drawer-btn" onclick="toggleMobileMenu(false)" aria-label="Close Navigation Menu" style="background: none; border: none; font-size: 1.25rem; color: var(--text-light); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.2s;">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="drawer-body" style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+      <!-- Mobile Search Portal -->
+      <div class="mobile-search-bar" style="position: relative; width: 100%;">
+        <input type="text" id="mobileSearchInput" placeholder="Search premium fashion..." oninput="handleNavbarSearch(event)" autocomplete="off" style="width: 100%; padding: 10px 16px 10px 40px; border-radius: 50px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text); font-size: 0.9rem; transition: border-color 0.2s, box-shadow 0.2s;">
+        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 0.9rem;"></i>
+      </div>
+      <div class="mobile-nav-links" style="display: flex; flex-direction: column; gap: 8px;">
+        <a href="#" class="mobile-nav-link active" id="mob-nav-home" onclick="handleMobileNavLinkClick('home')" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); color: var(--text); font-weight: 500; text-decoration: none; transition: background 0.2s, color 0.2s;"><i class="fa-solid fa-house" style="width: 20px;"></i> Home</a>
+        <a href="#" class="mobile-nav-link" id="mob-nav-shop" onclick="handleMobileNavLinkClick('shop')" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); color: var(--text); font-weight: 500; text-decoration: none; transition: background 0.2s, color 0.2s;"><i class="fa-solid fa-bag-shopping" style="width: 20px;"></i> Shop</a>
+        <a href="#" class="mobile-nav-link" id="mob-nav-ai-stylist" onclick="handleMobileNavLinkClick('ai-stylist')" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); color: var(--text); font-weight: 500; text-decoration: none; transition: background 0.2s, color 0.2s;"><i class="fa-solid fa-wand-magic-sparkles" style="width: 20px;"></i> AI Stylist</a>
+        <a href="#" class="mobile-nav-link" id="mob-nav-wishlist" onclick="handleMobileNavLinkClick('wishlist')" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); color: var(--text); font-weight: 500; text-decoration: none; transition: background 0.2s, color 0.2s;"><i class="fa-solid fa-heart" style="width: 20px;"></i> Wishlist</a>
+        <a href="#" class="mobile-nav-link" id="mob-nav-history" onclick="handleMobileNavLinkClick('history')" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); color: var(--text); font-weight: 500; text-decoration: none; transition: background 0.2s, color 0.2s;"><i class="fa-solid fa-clock-rotate-left" style="width: 20px;"></i> History</a>
+        <a href="#" class="mobile-nav-link" id="mob-nav-admin" onclick="handleMobileNavLinkClick('admin')" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); color: var(--text); font-weight: 500; text-decoration: none; transition: background 0.2s, color 0.2s;"><i class="fa-solid fa-user-gear" style="width: 20px;"></i> Admin Panel</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating WhatsApp Button -->
+  <a href="https://wa.me/917827782899?text=Hello%20Smart%20Collection%2C%20I%20have%20a%20query%20about%20your%20products." 
+     target="_blank" 
+     class="whatsapp-float" 
+     id="whatsappFloatBtn" 
+     aria-label="Chat on WhatsApp" 
+     title="Contact Customer Support on WhatsApp">
+    <i class="fa-brands fa-whatsapp"></i>
+    <span class="whatsapp-float-tooltip">Chat with Support</span>
+  </a>
+
+  <!-- Google Sign-In SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Application Logic JS -->
+  <script src="app.js"></script>
+</body>
+</html>
