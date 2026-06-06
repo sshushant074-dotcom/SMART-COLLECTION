@@ -4083,6 +4083,81 @@ input[type="text"], input[type="tel"], input[type="email"], input[type="password
     bottom: 74px;
     right: 12px;
   }
+
+  /* Header actions spacing */
+  .header-actions {
+    gap: 8px !important;
+  }
+
+  /* Promo Banner Grid mobile fix - Stack them vertically */
+  .promo-grid {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+  }
+  
+  .promo-banner {
+    height: 150px !important;
+  }
+
+  .promo-banner h4 {
+    font-size: 1.15rem !important;
+  }
+
+  .promo-banner p {
+    font-size: 0.75rem !important;
+  }
+
+  /* Shop By Occasion mobile fix - Horizontal Scrolling */
+  .event-cards-grid {
+    display: flex !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    gap: 12px !important;
+    padding: 10px 5px 15px 5px !important;
+    margin: 0 -15px !important;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  .event-cards-grid::-webkit-scrollbar {
+    display: none !important; /* Hide scrollbar for cleaner look */
+  }
+
+  .event-card {
+    flex: 0 0 135px !important; /* Fixed width for horizontal items */
+    height: 190px !important;
+    padding: 12px !important;
+    scroll-snap-align: start !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+  }
+
+  .event-card h4 {
+    font-size: 0.9rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .event-card p {
+    font-size: 0.68rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Mix & Match Container mobile padding reduction */
+  .mix-match-container {
+    padding: 16px !important;
+    margin-top: 15px !important;
+    gap: 15px !important;
+  }
+  .mix-match-selectors {
+    gap: 12px !important;
+  }
+  .mix-match-preview-pane {
+    min-height: 200px !important;
+    padding: 15px !important;
+  }
 }
 
 /* Extra small viewport optimizations */
