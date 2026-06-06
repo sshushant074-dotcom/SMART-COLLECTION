@@ -4,7 +4,8 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const dns = require('dns');
-if (process.env.MONGODB_URI && process.env.MONGODB_URI.startsWith('mongodb+srv')) {
+const mongoUri = process.env.MONGODB_URL || process.env.MONGODB_URI;
+if (mongoUri && mongoUri.startsWith('mongodb+srv')) {
   try {
     dns.setServers(['8.8.8.8', '1.1.1.1']);
     dns.setDefaultResultOrder('ipv4first');
@@ -15,7 +16,7 @@ if (process.env.MONGODB_URI && process.env.MONGODB_URI.startsWith('mongodb+srv')
 
 
 // MONGODB URI Config
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/smart_collection';
+const MONGODB_URI = process.env.MONGODB_URL || process.env.MONGODB_URI || 'mongodb://localhost:27017/smart_collection';
 
 async function runBackup() {
   console.log(`💾 [Backup Tool] Initiating database backup process at ${new Date().toISOString()}...`);

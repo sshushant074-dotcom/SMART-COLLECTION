@@ -1,6 +1,7 @@
 require('dotenv').config();
 const dns = require('dns');
-if (process.env.MONGODB_URI && process.env.MONGODB_URI.startsWith('mongodb+srv')) {
+const mongoUri = process.env.MONGODB_URL || process.env.MONGODB_URI;
+if (mongoUri && mongoUri.startsWith('mongodb+srv')) {
   try {
     dns.setServers(['8.8.8.8', '1.1.1.1']);
     dns.setDefaultResultOrder('ipv4first');
@@ -42,7 +43,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // MongoDB Database Mongoose Configuration & Schemas
 // ==========================================================================
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/smart_collection';
+const MONGODB_URI = process.env.MONGODB_URL || process.env.MONGODB_URI || 'mongodb://localhost:27017/smart_collection';
 
 mongoose.connect(MONGODB_URI)
   .then(() => {

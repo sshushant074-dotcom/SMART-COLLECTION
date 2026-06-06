@@ -6,7 +6,8 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const dns = require('dns');
-if ((process.env.MONGODB_URI || '').startsWith('mongodb+srv')) {
+const mongoUri = process.env.MONGODB_URL || process.env.MONGODB_URI;
+if (mongoUri && mongoUri.startsWith('mongodb+srv')) {
   try {
     dns.setServers(['8.8.8.8', '1.1.1.1']);
     dns.setDefaultResultOrder('ipv4first');
@@ -17,7 +18,7 @@ if ((process.env.MONGODB_URI || '').startsWith('mongodb+srv')) {
 
 
 // Robust connection string detection
-let MONGODB_URI = process.env.MONGODB_URI;
+let MONGODB_URI = process.env.MONGODB_URL || process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
   const envPath = path.join(__dirname, '.env');
