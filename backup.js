@@ -3,6 +3,17 @@ const path = require('path');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+const dns = require('dns');
+if (process.env.MONGODB_URI && process.env.MONGODB_URI.startsWith('mongodb+srv')) {
+  try {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+    dns.setDefaultResultOrder('ipv4first');
+  } catch (err) {
+    console.warn('⚠️ Failed to set custom DNS servers:', err.message);
+  }
+}
+
+
 // MONGODB URI Config
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/smart_collection';
 

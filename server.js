@@ -1,6 +1,16 @@
 require('dotenv').config();
+const dns = require('dns');
+if (process.env.MONGODB_URI && process.env.MONGODB_URI.startsWith('mongodb+srv')) {
+  try {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+    dns.setDefaultResultOrder('ipv4first');
+  } catch (err) {
+    console.warn('⚠️ Failed to set custom DNS servers:', err.message);
+  }
+}
 const express = require('express');
 const mongoose = require('mongoose');
+
 const cors = require('cors');
 const path = require('path');
 const QRCode = require('qrcode');

@@ -3,5 +3,7 @@ node_modules/
 backups/
 verify_*.js
 view_*.js
+test_*.js
 *.log
+
 .system_generated/
