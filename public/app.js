@@ -4810,15 +4810,25 @@ function showMockSmsBanner(phone, otp) {
   }, 7000);
 }
 
-// --- GOOGLE SIGN-IN HANDLERS ---
-function initializeGoogleSignIn() {
+async function initializeGoogleSignIn() {
   if (typeof google === 'undefined') {
     setTimeout(initializeGoogleSignIn, 500);
     return;
   }
   
+  let clientId = "1039845700248-sandbox.apps.googleusercontent.com";
+  try {
+    const res = await fetch('/api/config/google-client-id');
+    const data = await res.json();
+    if (data.clientId) {
+      clientId = data.clientId;
+    }
+  } catch (err) {
+    console.warn("Failed to fetch Google Client ID from backend, using default:", err.message);
+  }
+  
   google.accounts.id.initialize({
-    client_id: "1039845700248-sandbox.apps.googleusercontent.com",
+    client_id: clientId,
     callback: handleGoogleCredentialResponse
   });
   

@@ -1116,6 +1116,11 @@ app.post('/api/auth/verify-otp', async (req, res) => {
   }
 });
 
+// Google Client ID Config
+app.get('/api/config/google-client-id', (req, res) => {
+  res.json({ clientId: process.env.GOOGLE_CLIENT_ID || "1039845700248-sandbox.apps.googleusercontent.com" });
+});
+
 // Google Sign-In verification
 app.post('/api/auth/google', async (req, res) => {
   try {
