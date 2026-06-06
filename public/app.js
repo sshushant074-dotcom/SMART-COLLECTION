@@ -4404,11 +4404,14 @@ function downloadInvoice(orderId) {
   element.innerHTML = `
     <!-- Header -->
     <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0070f3; padding-bottom: 20px; margin-bottom: 20px;">
-      <div>
-        <h1 style="margin: 0 0 5px 0; color: #0070f3; font-size: 2rem; font-weight: 800; font-family: 'Playfair Display', serif;">Smart Collection</h1>
-        <p style="margin: 0; font-size: 0.85rem; color: #666;">Ready Made Hub</p>
-        <p style="margin: 3px 0 0 0; font-size: 0.85rem; color: #666;">Near Main Chowk, Jalalpur, Saran, Bihar (841412)</p>
-        <p style="margin: 3px 0 0 0; font-size: 0.85rem; color: #666;">Phone: +91 7827782899 | Email: smartcollection.jalalpur@gmail.com</p>
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <img src="images/logo.jpg" alt="Logo" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
+        <div>
+          <h1 style="margin: 0 0 5px 0; color: #0070f3; font-size: 2rem; font-weight: 800; font-family: 'Playfair Display', serif;">Smart Collection</h1>
+          <p style="margin: 0; font-size: 0.85rem; color: #666;">Ready Made Hub</p>
+          <p style="margin: 3px 0 0 0; font-size: 0.85rem; color: #666;">Near Main Chowk, Jalalpur, Saran, Bihar (841412)</p>
+          <p style="margin: 3px 0 0 0; font-size: 0.85rem; color: #666;">Phone: +91 7827782899 | Email: smartcollection.jalalpur@gmail.com</p>
+        </div>
       </div>
       <div style="text-align: right;">
         <h2 style="margin: 0 0 10px 0; color: #333; font-size: 1.5rem; font-weight: 700;">RETAIL INVOICE</h2>
@@ -6360,9 +6363,12 @@ window.exportSalesReport = function(format) {
       </head>
       <body>
         <div class="header">
-          <div>
-            <span class="logo">Smart Collection</span>
-            <h1 class="title">Sales Report</h1>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="images/logo.jpg" alt="Logo" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover;">
+            <div>
+              <span class="logo" style="font-size: 1.6rem; font-weight: 800; color: #5a52ed;">Smart Collection</span>
+              <h1 class="title" style="margin: 0; font-size: 1.8rem; font-weight: 700; color: #111;">Sales Report</h1>
+            </div>
           </div>
           <div class="meta-info">
             <p><strong>Export Date:</strong> ${new Date().toLocaleDateString('en-IN')}</p>

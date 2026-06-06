@@ -390,14 +390,12 @@ body.dark-theme .slider-dot {
 .logo-icon {
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--primary), var(--girls-color));
-  color: white;
+  border-radius: 50%;
+  background: transparent;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 1.4rem;
-  box-shadow: 0 4px 10px var(--primary-glow);
+  overflow: hidden;
 }
 
 .logo-text h1 {
