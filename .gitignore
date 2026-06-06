@@ -2,5 +2,6 @@ node_modules/
 .env
 backups/
 verify_*.js
+view_*.js
 *.log
 .system_generated/
