@@ -210,7 +210,10 @@ async function loadAllData() {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('👷 [PWA] Service Worker registered successfully with scope:', reg.scope))
+      .then(reg => {
+        console.log('👷 [PWA] Service Worker registered successfully with scope:', reg.scope);
+        checkPwaInstallState();
+      })
       .catch(err => console.error('👷 [PWA] Service Worker registration failed:', err));
   });
 }
@@ -233,6 +236,71 @@ window.addEventListener('appinstalled', () => {
   }
 });
 
+function checkPwaInstallState() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  const installBtn = document.getElementById('pwaInstallBtn');
+  if (installBtn) {
+    if (isStandalone) {
+      installBtn.style.display = 'none';
+    } else {
+      installBtn.style.display = 'flex'; // show installation options by default on mobile
+    }
+  }
+}
+
+function showPwaInstallationInstructions() {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  
+  // Create modal markup dynamically
+  const modalHtml = `
+    <div class="modal-backdrop active" id="pwaInstructionsModal" onclick="closePwaInstructions()" style="background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center;">
+      <div class="modal-container" style="max-width: 400px; text-align: center; padding: 25px; border-radius: 16px; margin: 15px; box-sizing: border-box;" onclick="event.stopPropagation()">
+        <div style="font-size: 3rem; margin-bottom: 12px;">📲</div>
+        <h3 style="margin: 0 0 10px 0; font-size: 1.25rem; font-weight: 800; color: var(--primary); text-transform: uppercase;">Install App</h3>
+        <p style="margin: 0 0 20px 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.45;">
+          Add Smart Collection to your home screen for instant access, offline shopping, and better performance!
+        </p>
+        
+        <div style="background-color: var(--bg-accent); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: left; margin-bottom: 20px; font-size: 0.85rem; box-sizing: border-box;">
+          ${isIOS ? `
+            <strong style="color: var(--text); display: block; margin-bottom: 8px;"><i class="fa-brands fa-apple" style="color: var(--primary);"></i> iPhone / iPad (Safari):</strong>
+            <ol style="margin: 0; padding-left: 20px; line-height: 1.6; color: var(--text-muted);">
+              <li>Tap the <strong>Share</strong> button <i class="fa-solid fa-arrow-up-from-bracket" style="color: var(--primary); margin: 0 2px;"></i> inside Safari's menu.</li>
+              <li>Scroll down and select <strong>Add to Home Screen</strong> <i class="fa-regular fa-square-plus" style="color: var(--primary); margin: 0 2px;"></i>.</li>
+              <li>Tap <strong>Add</strong> in the top-right corner to complete!</li>
+            </ol>
+          ` : `
+            <strong style="color: var(--text); display: block; margin-bottom: 8px;"><i class="fa-brands fa-chrome" style="color: var(--primary);"></i> Android / Windows:</strong>
+            <ol style="margin: 0; padding-left: 20px; line-height: 1.6; color: var(--text-muted);">
+              <li>Tap your browser's menu (three dots <i class="fa-solid fa-ellipsis-vertical" style="margin: 0 2px;"></i>) at the top or bottom.</li>
+              <li>Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+              <li>Confirm the download to add the app to your device!</li>
+            </ol>
+          `}
+        </div>
+        
+        <button class="btn btn-primary btn-large" onclick="closePwaInstructions()" style="width: 100%; border-radius: 50px; min-height: 40px; font-weight: 700;">Got It</button>
+      </div>
+    </div>
+  `;
+  
+  // Remove existing modal if any
+  closePwaInstructions();
+  
+  // Append modal to body
+  const div = document.createElement('div');
+  div.id = 'pwaInstructionsContainer';
+  div.innerHTML = modalHtml;
+  document.body.appendChild(div);
+}
+
+function closePwaInstructions() {
+  const container = document.getElementById('pwaInstructionsContainer');
+  if (container) {
+    container.remove();
+  }
+}
+
 // ==========================================================================
 // Initialization & Events Loaders
 // ==========================================================================
@@ -242,12 +310,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const installBtn = document.getElementById('pwaInstallBtn');
   if (installBtn) {
     installBtn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`👷 [PWA] Install prompt outcome: ${outcome}`);
-      deferredPrompt = null;
-      installBtn.style.display = 'none';
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`👷 [PWA] Install prompt outcome: ${outcome}`);
+        deferredPrompt = null;
+        installBtn.style.display = 'none';
+      } else {
+        showPwaInstallationInstructions();
+      }
     });
   }
 
