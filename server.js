@@ -1849,8 +1849,9 @@ app.get('/api/qr/upi', async (req, res) => {
       return res.status(400).json({ error: "Amount query parameter is required" });
     }
     const parsedAmount = parseFloat(amount).toFixed(2);
-    const merchantName = "Sushant Singh";
-    const upiId = "sshushant074@oksbi";
+    const merchantName = process.env.MERCHANT_NAME || "Sushant Singh";
+    const upiId = process.env.UPI_ID || "sshushant074@oksbi";
+
     
     // Construct standard UPI intent link
     // upi://pay?pa=address&pn=name&am=amount&cu=INR&tn=message
