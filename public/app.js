@@ -1405,14 +1405,18 @@ function generateProductCardMarkup(p) {
           </div>
         </div>
 
-        <div class="product-price-row">
-          <span class="product-price" style="white-space: nowrap;">
+        <div class="product-price-row" style="display: flex; justify-content: space-between; align-items: flex-end; width: 100%;">
+          <div class="price-stack" style="display: flex; flex-direction: column; gap: 2px; text-align: left;">
             ${p.salePrice && p.salePrice < p.price ? `
-              ₹${p.salePrice}
-              <span class="original-price-slashed" style="text-decoration: line-through; color: var(--text-muted); font-size: 0.9rem; margin-left: 6px; font-weight: 500;">₹${p.price}</span>
-              <span class="price-discount-percent" style="color: #2ec4b6; font-size: 0.85rem; font-weight: 700; margin-left: 8px; white-space: nowrap;">(${Math.round(((p.price - p.salePrice) / p.price) * 100)}% OFF)</span>
-            ` : `₹${p.price}`}
-          </span>
+              <div style="display: flex; align-items: baseline; gap: 4px;">
+                <span class="product-price" style="font-size: 1.25rem; font-weight: 700; color: var(--primary);">₹${p.salePrice}</span>
+                <span class="original-price-slashed" style="text-decoration: line-through; color: var(--text-muted); font-size: 0.8rem; font-weight: 500;">₹${p.price}</span>
+              </div>
+              <span class="price-discount-percent" style="color: #2ec4b6; font-size: 0.78rem; font-weight: 700; white-space: nowrap;">(${Math.round(((p.price - p.salePrice) / p.price) * 100)}% OFF)</span>
+            ` : `
+              <span class="product-price" style="font-size: 1.25rem; font-weight: 700; color: var(--primary);">₹${p.price}</span>
+            `}
+          </div>
           <div class="card-btn-container" data-btn-for="${dbId}"></div>
         </div>
       </div>
