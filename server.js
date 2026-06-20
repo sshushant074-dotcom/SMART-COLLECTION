@@ -1825,7 +1825,7 @@ app.get('/api/audit-logs', async (req, res) => {
 // 1. GET all banners (both active and inactive for admin)
 app.get('/api/banners', async (req, res) => {
   try {
-    const banners = await Banner.find().sort({ order: 1 });
+    const banners = await Banner.find().sort({ order: 1 }).allowDiskUse();
     res.json(banners);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1835,7 +1835,7 @@ app.get('/api/banners', async (req, res) => {
 // 2. GET active banners for storefront
 app.get('/api/banners/active', async (req, res) => {
   try {
-    const active = await Banner.find({ isActive: true }).sort({ order: 1 });
+    const active = await Banner.find({ isActive: true }).sort({ order: 1 }).allowDiskUse();
     res.json(active);
   } catch (err) {
     res.status(500).json({ error: err.message });
