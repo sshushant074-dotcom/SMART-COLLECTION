@@ -1808,8 +1808,11 @@ app.post('/api/orders/:id/delhivery-ship', async (req, res) => {
     const token = process.env.DELHIVERY_API_TOKEN;
     const isMock = !token || token === "your_delhivery_api_token_here";
 
-    const paymentMode = (order.transactionId || order.paymentScreenshot) ? "Prepaid" : "COD";
-    const codAmount = paymentMode === "COD" ? order.subtotal : 0;
+    const isCOD = (order.transactionId === "COD" || (!order.transactionId && !order.paymentScreenshot));
+    const paymentMode = isCOD ? "COD" : "Prepaid";
+    const deliveryFee = (order.delivery === "delivery" && order.subtotal < 1000) ? 50 : 0;
+    const finalAmount = order.subtotal + deliveryFee - (order.loyaltyDiscount || 0);
+    const codAmount = paymentMode === "COD" ? finalAmount : 0;
     const desc = order.items.map(i => `${i.name} (x${i.qty})`).join(", ");
 
     const pickupLocation = {
@@ -1828,7 +1831,7 @@ app.post('/api/orders/:id/delhivery-ship', async (req, res) => {
           phone: order.customerPhone,
           payment_mode: paymentMode,
           order: `SC-${order.orderId}`,
-          total_amount: order.subtotal,
+          total_amount: finalAmount,
           cod_amount: codAmount,
           products_desc: desc,
           weight: 500,
@@ -2024,7 +2027,10 @@ app.get('/api/orders/:id/delhivery-label', async (req, res) => {
       return res.status(400).send("Order has not been shipped via Delhivery yet.");
     }
 
-    const paymentMode = (order.transactionId || order.paymentScreenshot) ? "PREPAID" : "COD";
+    const isCOD = (order.transactionId === "COD" || (!order.transactionId && !order.paymentScreenshot));
+    const paymentMode = isCOD ? "COD" : "PREPAID";
+    const deliveryFee = (order.delivery === "delivery" && order.subtotal < 1000) ? 50 : 0;
+    const finalAmount = order.subtotal + deliveryFee - (order.loyaltyDiscount || 0);
 
     const labelHtml = `
 <!DOCTYPE html>
@@ -2155,20 +2161,20 @@ app.get('/api/orders/:id/delhivery-label', async (req, res) => {
     <div class="label-container">
       <div class="header">
         <h2>DELHIVERY</h2>
-        <div class="payment-badge" style="\${paymentMode === 'COD' ? 'background-color: #000; color: #fff;' : ''}">
-          \${paymentMode}
+        <div class="payment-badge" style="${paymentMode === 'COD' ? 'background-color: #000; color: #fff;' : ''}">
+          ${paymentMode}
         </div>
       </div>
       <div class="barcode-section">
         <svg id="barcode"></svg>
-        <div class="waybill-text">AWB: \${order.delhiveryWaybill}</div>
+        <div class="waybill-text">AWB: ${order.delhiveryWaybill}</div>
       </div>
       <div class="address-section">
         <div class="address-title">Ship To (Consignee)</div>
-        <div style="font-weight: bold; font-size: 14px;">\${order.customerName}</div>
-        <div>Phone: \${order.customerPhone}</div>
-        <div>\${order.address}</div>
-        <div style="font-weight: bold; font-size: 13px; margin-top: 3px;">PIN: \${order.pincode || ""}</div>
+        <div style="font-weight: bold; font-size: 14px;">${order.customerName}</div>
+        <div>Phone: ${order.customerPhone}</div>
+        <div>${order.address}</div>
+        <div style="font-weight: bold; font-size: 13px; margin-top: 3px;">PIN: ${order.pincode || ""}</div>
       </div>
       <div class="address-section">
         <div class="address-title">Ship From (Sender)</div>
@@ -2180,27 +2186,27 @@ app.get('/api/orders/:id/delhivery-label', async (req, res) => {
       <table class="details-table">
         <tr>
           <td class="label">Order ID:</td>
-          <td class="value">SC-\${order.orderId}</td>
+          <td class="value">SC-${order.orderId}</td>
         </tr>
         <tr>
           <td class="label">Date:</td>
-          <td class="value">\${order.date}</td>
+          <td class="value">${order.date}</td>
         </tr>
         <tr>
           <td class="label">Weight / Qty:</td>
-          <td class="value">0.5 kg / \${order.items.reduce((sum, item) => sum + item.qty, 0)} Pcs</td>
+          <td class="value">0.5 kg / ${order.items.reduce((sum, item) => sum + item.qty, 0)} Pcs</td>
         </tr>
-        \${paymentMode === 'COD' ? \`
+        ${paymentMode === 'COD' ? `
         <tr>
           <td class="label" style="font-size: 14px; color: #000;">COD Collectible:</td>
-          <td class="value" style="font-size: 14px; color: #000;">₹\${order.subtotal}</td>
+          <td class="value" style="font-size: 14px; color: #000;">₹${finalAmount.toFixed(2)}</td>
         </tr>
-        \` : \`
+        ` : `
         <tr>
           <td class="label" style="font-size: 14px; color: #000;">Amount Paid:</td>
-          <td class="value" style="font-size: 14px; color: #000;">₹\${order.subtotal - order.loyaltyDiscount}</td>
+          <td class="value" style="font-size: 14px; color: #000;">₹${finalAmount.toFixed(2)}</td>
         </tr>
-        \`}
+        `}
       </table>
       
       <div class="footer-note">
@@ -2210,7 +2216,7 @@ app.get('/api/orders/:id/delhivery-label', async (req, res) => {
   </div>
   
   <script>
-    JsBarcode("#barcode", "\${order.delhiveryWaybill}", {
+    JsBarcode("#barcode", "${order.delhiveryWaybill}", {
       format: "CODE128",
       lineColor: "#000",
       width: 2,

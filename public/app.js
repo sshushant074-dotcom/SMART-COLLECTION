@@ -2545,7 +2545,7 @@ async function placeCODOrder() {
     customerEmail: (currentCustomer && currentCustomer.email) ? currentCustomer.email : "",
     redeemPoints: pointsRedeemed > 0,
     pointsRedeemed: pointsRedeemed,
-    transactionId: "",
+    transactionId: "COD",
     paymentScreenshot: ""
   };
 
@@ -2621,6 +2621,9 @@ function renderHistory() {
   emptyMsg.style.display = "none";
 
   container.innerHTML = myOrders.map(order => {
+    const deliveryFee = (order.delivery === 'delivery' && order.subtotal < 1000) ? 50 : 0;
+    const finalTotal = order.subtotal + deliveryFee - (order.loyaltyDiscount || 0);
+
     // Generate tracking timeline details
     let progressPercent = 0;
     const s = order.status;
@@ -2781,9 +2784,19 @@ function renderHistory() {
           <div class="delivery-info">
             <strong>Method:</strong> ${order.delivery === 'pickup' ? 'Pickup at Shop' : (order.trackingCourier === 'Delhivery' ? 'Delhivery Shipping' : 'Local Delivery')}
             ${order.delivery === 'delivery' ? `<br><small>${order.address} (PIN: ${order.pincode || ''})</small>` : ''}
+            <br><strong>Payment:</strong> ${order.transactionId === 'COD' ? '<span style="color: var(--kids-color); font-weight: 700;">Cash on Delivery (COD)</span>' : (order.transactionId ? `Paid (UTR: ${order.transactionId})` : 'Paid (Simulated)')}
           </div>
           <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-            <div class="order-total">Total: ₹${order.subtotal}</div>
+            <div class="order-total">
+              ${order.transactionId === 'COD' ? 'Collectible' : 'Paid'}: ₹${finalTotal.toFixed(2)}
+              ${(order.loyaltyDiscount > 0 || deliveryFee > 0) ? `
+                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-top: 2px;">
+                  Subtotal: ₹${order.subtotal}
+                  ${deliveryFee > 0 ? ` + Delivery: ₹${deliveryFee}` : ''}
+                  ${order.loyaltyDiscount > 0 ? ` - Loyalty: ₹${order.loyaltyDiscount}` : ''}
+                </div>
+              ` : ''}
+            </div>
             ${(order.status === "Order Received" || order.status === "Confirmed" || order.status === "Pending" || order.status === "Paid & Ordered") ? 
               `<button class="btn btn-danger btn-small" onclick="openCancelOrderModal('${order._id}', '${order.orderId}')"><i class="fa-solid fa-rectangle-xmark"></i> Cancel Order</button>` : ''}
           </div>
@@ -3459,6 +3472,8 @@ function renderAdminOrders() {
       </tr>`;
   } else {
     tbodyActive.innerHTML = activeOrders.map(order => {
+      const deliveryFee = (order.delivery === "delivery" && order.subtotal < 1000) ? 50 : 0;
+      const finalTotal = order.subtotal + deliveryFee - (order.loyaltyDiscount || 0);
       const itemsText = order.items.map(item => `${item.name} (${item.qty})`).join(", ");
       
       let actionsHtml = "";
@@ -3508,7 +3523,11 @@ function renderAdminOrders() {
 
       // Proof of payment rendering
       let proofHtml = "";
-      if (order.transactionId || order.paymentScreenshot) {
+      if (order.transactionId === "COD") {
+        proofHtml = `
+          <span class="badge" style="background: linear-gradient(135deg, #f59f00 0%, #d97706 100%); font-size: 0.72rem; padding: 3px 8px; border: none; color: white;">COD</span>
+        `;
+      } else if (order.transactionId || order.paymentScreenshot) {
         proofHtml = `
           <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem;">
             ${order.transactionId ? `<div><strong>UTR:</strong> <span style="font-family: monospace; font-weight: 600; color: var(--text);">${order.transactionId}</span></div>` : ""}
@@ -3536,7 +3555,16 @@ function renderAdminOrders() {
           <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${itemsText}">
             ${itemsText}
           </td>
-          <td style="font-weight: 600; color: var(--primary);">₹${order.subtotal}</td>
+          <td style="font-weight: 600; color: var(--primary); font-size: 0.95rem;">
+            ₹${finalTotal.toFixed(2)}
+            ${(order.loyaltyDiscount > 0 || deliveryFee > 0) ? `
+              <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: normal; margin-top: 2px;">
+                Sub: ₹${order.subtotal}
+                ${deliveryFee > 0 ? `<br>Del: +₹${deliveryFee}` : ''}
+                ${order.loyaltyDiscount > 0 ? `<br>Loy: -₹${order.loyaltyDiscount}` : ''}
+              </div>
+            ` : ''}
+          </td>
           <td>
             ${proofHtml}
           </td>
@@ -3557,10 +3585,16 @@ function renderAdminOrders() {
       </tr>`;
   } else {
     tbodyCancelled.innerHTML = cancelledOrders.map(order => {
+      const deliveryFee = (order.delivery === "delivery" && order.subtotal < 1000) ? 50 : 0;
+      const finalTotal = order.subtotal + deliveryFee - (order.loyaltyDiscount || 0);
       const itemsText = order.items.map(item => `${item.name} (${item.qty})`).join(", ");
       
       let proofHtml = "";
-      if (order.transactionId || order.paymentScreenshot) {
+      if (order.transactionId === "COD") {
+        proofHtml = `
+          <span class="badge" style="background: linear-gradient(135deg, #f59f00 0%, #d97706 100%); font-size: 0.72rem; padding: 3px 8px; border: none; color: white;">COD</span>
+        `;
+      } else if (order.transactionId || order.paymentScreenshot) {
         proofHtml = `
           <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem;">
             ${order.transactionId ? `<div><strong>UTR:</strong> <span style="font-family: monospace; font-weight: 600;">${order.transactionId}</span></div>` : ""}
@@ -3588,7 +3622,16 @@ function renderAdminOrders() {
           <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${itemsText}">
             ${itemsText}
           </td>
-          <td style="font-weight: 600; color: var(--text-muted);">₹${order.subtotal}</td>
+          <td style="font-weight: 600; color: var(--text-muted); font-size: 0.95rem;">
+            ₹${finalTotal.toFixed(2)}
+            ${(order.loyaltyDiscount > 0 || deliveryFee > 0) ? `
+              <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: normal; margin-top: 2px;">
+                Sub: ₹${order.subtotal}
+                ${deliveryFee > 0 ? `<br>Del: +₹${deliveryFee}` : ''}
+                ${order.loyaltyDiscount > 0 ? `<br>Loy: -₹${order.loyaltyDiscount}` : ''}
+              </div>
+            ` : ''}
+          </td>
           <td>
             ${proofHtml}
           </td>
