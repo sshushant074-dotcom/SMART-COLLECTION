@@ -1920,6 +1920,7 @@ function validateCheckoutForm() {
   const phone = document.getElementById("chkPhone").value.trim();
   const delivery = document.getElementById("chkDeliveryMethod").value;
   const address = document.getElementById("chkAddress").value.trim();
+  const pincode = (document.getElementById("chkPincode")?.value || "").trim();
 
   if (!name || !phone) {
     alert("Please enter both Name and Mobile Number!");
@@ -1939,12 +1940,18 @@ function validateCheckoutForm() {
     return null;
   }
 
-  if (delivery === "delivery" && !address) {
-    alert("Please enter the Delivery Address in Jalalpur!");
-    return null;
+  if (delivery === "delivery") {
+    if (!address) {
+      alert("Please enter the Delivery Address!");
+      return null;
+    }
+    if (!pincode || pincode.length !== 6 || !/^\d{6}$/.test(pincode)) {
+      alert("Please enter a valid 6-digit Pincode for home delivery!");
+      return null;
+    }
   }
 
-  return { name, phone: cleanPhone, delivery, address };
+  return { name, phone: cleanPhone, delivery, address, pincode };
 }
 
 function checkoutWhatsApp() {
@@ -2149,6 +2156,7 @@ async function simulatePaymentSuccess() {
     subtotal: subtotal,
     delivery: form.delivery,
     address: form.address,
+    pincode: form.pincode || "",
     customerName: form.name,
     customerPhone: form.phone,
     customerEmail: (currentCustomer && currentCustomer.email) ? currentCustomer.email : "",
@@ -2223,6 +2231,7 @@ async function payWithRazorpay() {
     subtotal: subtotal,
     delivery: form.delivery,
     address: form.address,
+    pincode: form.pincode || "",
     customerName: form.name,
     customerPhone: form.phone,
     customerEmail: (currentCustomer && currentCustomer.email) ? currentCustomer.email : "",
@@ -2325,9 +2334,160 @@ async function payWithRazorpay() {
     const rzp = new Razorpay(options);
     rzp.open();
 
-  } catch (err) {
-    alert(`Payment initialization failed: ${err.message}`);
   }
+}
+
+// ==========================================================================
+// Delhivery Direct Shipping Helper Functions
+// ==========================================================================
+
+async function handlePincodeInput(pincode) {
+  const statusText = document.getElementById("delhiveryStatusText");
+  if (!statusText) return;
+
+  if (!pincode || pincode.length !== 6 || !/^\d{6}$/.test(pincode)) {
+    statusText.textContent = "Enter PIN";
+    statusText.style.color = "var(--text-muted)";
+    statusText.style.background = "rgba(0,0,0,0.05)";
+    return;
+  }
+
+  statusText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
+  statusText.style.color = "var(--text-muted)";
+  statusText.style.background = "rgba(0,0,0,0.05)";
+
+  try {
+    const res = await fetch(`/api/delhivery/check-pincode?pincode=${pincode}`);
+    const data = await res.json();
+    if (data && data.serviceable) {
+      statusText.innerHTML = '<i class="fa-solid fa-circle-check"></i> Serviceable (' + (data.estDeliveryDays || 5) + ' days)';
+      statusText.style.color = "#10b981";
+      statusText.style.background = "rgba(16, 185, 129, 0.1)";
+    } else {
+      statusText.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Not Serviceable (Fallback via Post)';
+      statusText.style.color = "#f59f00";
+      statusText.style.background = "rgba(245, 159, 0, 0.1)";
+    }
+  } catch (err) {
+    console.error("Failed to verify pincode:", err);
+    statusText.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Offline Fallback';
+    statusText.style.color = "#f59f00";
+    statusText.style.background = "rgba(245, 159, 0, 0.1)";
+  }
+}
+
+async function shipViaDelhivery(orderId) {
+  try {
+    const confirmShip = confirm("Are you sure you want to register this shipment with Delhivery?");
+    if (!confirmShip) return;
+
+    const res = await fetchFromApi(`/api/orders/${orderId}/delhivery-ship`, {
+      method: "POST"
+    });
+
+    if (res && res.success) {
+      alert(`🎉 Shipment manifested successfully!\nWaybill: ${res.waybill}`);
+      await loadAllData();
+      renderAdminOrders();
+    } else {
+      throw new Error(res.error || "Failed to ship order via Delhivery.");
+    }
+  } catch (err) {
+    alert(`Delhivery shipping failed: ${err.message}`);
+  }
+}
+
+async function trackDelhiveryShipment(dbId, orderId) {
+  const modal = document.getElementById("delhiveryTrackingModalBackdrop");
+  const trackWaybill = document.getElementById("trackWaybill");
+  const statusBadge = document.getElementById("trackCurrentStatusBadge");
+  const timeline = document.getElementById("trackTimeline");
+
+  if (!modal || !trackWaybill || !statusBadge || !timeline) return;
+
+  trackWaybill.textContent = "Loading...";
+  statusBadge.textContent = "Loading...";
+  statusBadge.className = "status-badge";
+  statusBadge.style.background = "var(--border)";
+  statusBadge.style.color = "var(--text-muted)";
+  
+  timeline.innerHTML = `
+    <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+      <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i><br>
+      Connecting to Delhivery tracking services...
+    </div>
+  `;
+
+  modal.classList.add("active");
+
+  try {
+    const res = await fetch(`/api/orders/${dbId}/delhivery-track`);
+    const data = await res.json();
+
+    if (data && data.success) {
+      trackWaybill.textContent = data.waybill;
+      statusBadge.textContent = data.status;
+      
+      if (data.status === "Delivered") {
+        statusBadge.style.background = "rgba(16, 185, 129, 0.15)";
+        statusBadge.style.color = "#10b981";
+      } else if (data.status === "Manifested") {
+        statusBadge.style.background = "rgba(59, 130, 246, 0.15)";
+        statusBadge.style.color = "#3b82f6";
+      } else {
+        statusBadge.style.background = "rgba(245, 159, 0, 0.15)";
+        statusBadge.style.color = "#f59f00";
+      }
+
+      if (data.history && data.history.length > 0) {
+        let html = '<div class="track-timeline-line"></div>';
+        
+        data.history.forEach((milestone, idx) => {
+          const isCurrent = idx === data.history.length - 1;
+          const timeFormatted = milestone.time ? new Date(milestone.time).toLocaleString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit'
+          }) : '';
+
+          html += `
+            <div class="track-milestone active \${isCurrent ? 'current' : ''}">
+              <div class="track-milestone-dot"></div>
+              <div class="track-milestone-title">\${milestone.status}</div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+                <span class="track-milestone-location">\${milestone.location || 'Hub'}</span>
+                <span class="track-milestone-time">\${timeFormatted}</span>
+              </div>
+              <div class="track-milestone-details">\${milestone.details || ''}</div>
+            </div>
+          `;
+        });
+        
+        timeline.innerHTML = html;
+      } else {
+        timeline.innerHTML = `
+          <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+            No scans recorded yet. Package is awaiting pickup.
+          </div>
+        `;
+      }
+    } else {
+      throw new Error(data.error || "No response");
+    }
+  } catch (err) {
+    console.error("Tracking error:", err);
+    timeline.innerHTML = `
+      <div style="text-align: center; padding: 20px; color: var(--danger);">
+        <i class="fa-solid fa-circle-exclamation" style="font-size: 1.5rem; margin-bottom: 8px;"></i><br>
+        Failed to fetch real-time tracking details from Delhivery. Please try again later.
+      </div>
+    `;
+  }
+}
+
+function closeDelhiveryTrackingModal() {
+  document.getElementById("delhiveryTrackingModalBackdrop").classList.remove("active");
 }
 
 // ==========================================================================
@@ -2442,10 +2602,20 @@ function renderHistory() {
       </div>
     `;
 
+    let trackButtonHtml = '';
+    if (order.trackingCourier === 'Delhivery' && order.delhiveryWaybill) {
+      trackButtonHtml = `
+        <button class="btn btn-secondary btn-small" style="margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; background: rgba(90,82,237,0.1); color: var(--primary); border: 1px solid rgba(90,82,237,0.3);" onclick="trackDelhiveryShipment('${order._id}', '${order.orderId}')">
+          <i class="fa-solid fa-truck-fast"></i> Live Delhivery Track
+        </button>
+      `;
+    }
+
     const courierHtml = (order.trackingCourier || order.trackingNumber) ? `
       <div class="tracking-details" style="margin-bottom: 15px;">
         <strong>🚚 Courier Partner:</strong> ${order.trackingCourier} <br>
         <strong>📦 Tracking ID:</strong> <code>${order.trackingNumber}</code>
+        ${trackButtonHtml}
       </div>
     ` : '';
 
@@ -3221,11 +3391,25 @@ function renderAdminOrders() {
         `;
       } else if (s === "Packed") {
         actionsHtml = `
-          <button class="btn btn-primary btn-small" style="padding: 4px 10px; font-size: 0.75rem;" onclick="updateOrderStatus('${order._id}', 'Shipped')">Ship</button>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button class="btn btn-secondary btn-small" style="padding: 4px 10px; font-size: 0.75rem;" onclick="updateOrderStatus('${order._id}', 'Shipped')">Ship (Manual)</button>
+            <button class="btn btn-primary btn-small" style="padding: 4px 10px; font-size: 0.75rem; background: #e71d36; border-color: transparent;" onclick="shipViaDelhivery('${order._id}')"><i class="fa-solid fa-truck-fast"></i> Delhivery Ship</button>
+          </div>
         `;
       } else if (s === "Shipped") {
+        let labelButton = "";
+        if (order.trackingCourier === "Delhivery" && order.delhiveryWaybill) {
+          labelButton = `
+            <a href="/api/orders/${order._id}/delhivery-label" target="_blank" class="btn btn-secondary btn-small" style="padding: 4px 10px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; background: #0f172a; color: white; border: none;">
+              <i class="fa-solid fa-print"></i> Print Label
+            </a>
+          `;
+        }
         actionsHtml = `
-          <button class="btn btn-primary btn-small" style="padding: 4px 10px; font-size: 0.75rem;" onclick="updateOrderStatus('${order._id}', 'Out for Delivery')">Out for Delivery</button>
+          <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+            <button class="btn btn-primary btn-small" style="padding: 4px 10px; font-size: 0.75rem;" onclick="updateOrderStatus('${order._id}', 'Out for Delivery')">Out for Delivery</button>
+            ${labelButton}
+          </div>
         `;
       } else if (s === "Out for Delivery") {
         actionsHtml = `

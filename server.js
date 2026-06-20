@@ -94,6 +94,7 @@ const OrderSchema = new mongoose.Schema({
   subtotal: { type: Number, required: true },
   delivery: { type: String, required: true },
   address: String,
+  pincode: { type: String, default: "" },
   customerName: { type: String, required: true },
   customerPhone: { type: String, required: true },
   customerEmail: { type: String, default: "" },
@@ -103,6 +104,8 @@ const OrderSchema = new mongoose.Schema({
   deliveryDate: { type: String, default: "" },
   trackingCourier: { type: String, default: "" },
   trackingNumber: { type: String, default: "" },
+  delhiveryWaybill: { type: String, default: "" },
+  delhiveryStatus: { type: String, default: "" },
   cancelReason: { type: String, default: "" },
   transactionId: { type: String, default: "" },
   paymentScreenshot: { type: String, default: "" }
@@ -1433,6 +1436,7 @@ async function processAndSaveOrder(orderData, status = "Order Received", operato
     subtotal: orderData.subtotal,
     delivery: orderData.delivery,
     address: orderData.address,
+    pincode: orderData.pincode || "",
     customerName: orderData.customerName,
     customerPhone: orderData.customerPhone,
     customerEmail: orderData.customerEmail || "",
@@ -1689,6 +1693,539 @@ app.delete('/api/orders/:id', async (req, res) => {
     res.json({ success: true, deletedId: req.params.id });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+
+// ==========================================================================
+// DELHIVERY DIRECT SHIPPING INTEGRATION ROUTES
+// ==========================================================================
+
+// 1. GET check pincode serviceability
+app.get('/api/delhivery/check-pincode', async (req, res) => {
+  try {
+    const { pincode } = req.query;
+    if (!pincode || pincode.length !== 6 || !/^\d{6}$/.test(pincode)) {
+      return res.status(400).json({ error: "Invalid pincode format. Must be 6 digits." });
+    }
+
+    const token = process.env.DELHIVERY_API_TOKEN;
+    if (!token || token === "your_delhivery_api_token_here") {
+      // Mock serviceability logic
+      console.log("ℹ️ [Delhivery Mock] Checking serviceability for pincode:", pincode);
+      if (pincode.endsWith('9')) {
+        return res.json({
+          serviceable: false,
+          prepaid: false,
+          cod: false,
+          district: "Test District",
+          state: "Test State",
+          provider: "Delhivery (Mock)",
+          message: "Area is not serviceable by Delhivery."
+        });
+      }
+      return res.json({
+        serviceable: true,
+        prepaid: true,
+        cod: true,
+        district: "Saran",
+        state: "Bihar",
+        provider: "Delhivery (Mock)",
+        estDeliveryDays: 4,
+        message: "Serviceable"
+      });
+    }
+
+    // Call real Delhivery pincode serviceability API
+    const apiUrl = `${process.env.DELHIVERY_API_URL || 'https://track.delhivery.com'}/c/api/pin-codes/json/?filter_codes=${pincode}`;
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Delhivery API returned status ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data && data.delivery_codes && data.delivery_codes.length > 0) {
+      const codeInfo = data.delivery_codes[0].postal_code;
+      const isPrepaid = codeInfo.prepaid === 'Y';
+      const isCod = codeInfo.cod === 'Y';
+      const isServiceable = isPrepaid || isCod;
+
+      return res.json({
+        serviceable: isServiceable,
+        prepaid: isPrepaid,
+        cod: isCod,
+        district: codeInfo.district || "",
+        state: codeInfo.state_code || "",
+        provider: "Delhivery",
+        estDeliveryDays: 5,
+        message: isServiceable ? "Serviceable" : "Not serviceable"
+      });
+    } else {
+      return res.json({
+        serviceable: false,
+        prepaid: false,
+        cod: false,
+        district: "",
+        state: "",
+        provider: "Delhivery",
+        message: "No serviceability details found for this pincode."
+      });
+    }
+  } catch (err) {
+    console.error("Delhivery Pincode Check Error:", err);
+    return res.json({
+      serviceable: true,
+      prepaid: true,
+      cod: true,
+      district: "Saran (Fallback)",
+      state: "Bihar",
+      provider: "Delhivery (Fallback)",
+      estDeliveryDays: 5,
+      message: "Serviceable (API Fallback)"
+    });
+  }
+});
+
+// 2. POST create a shipment/manifest via Delhivery
+app.post('/api/orders/:id/delhivery-ship', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    if (order.delhiveryWaybill) {
+      return res.status(400).json({ error: `Order is already shipped via Delhivery. AWB: ${order.delhiveryWaybill}` });
+    }
+
+    const token = process.env.DELHIVERY_API_TOKEN;
+    const isMock = !token || token === "your_delhivery_api_token_here";
+
+    const paymentMode = (order.transactionId || order.paymentScreenshot) ? "Prepaid" : "COD";
+    const codAmount = paymentMode === "COD" ? order.subtotal : 0;
+    const desc = order.items.map(i => `${i.name} (x${i.qty})`).join(", ");
+
+    const pickupLocation = {
+      name: process.env.DELHIVERY_PICKUP_LOCATION_NAME || "Smart Collection",
+      add: process.env.DELHIVERY_PICKUP_LOCATION_ADD || "Near Main Chowk, Jalalpur, Saran",
+      pin: process.env.DELHIVERY_PICKUP_LOCATION_PIN || "841412",
+      phone: process.env.DELHIVERY_PICKUP_LOCATION_PHONE || "7575757575"
+    };
+
+    const shipmentData = {
+      shipments: [
+        {
+          name: order.customerName,
+          add: order.address,
+          pin: order.pincode || "841412",
+          phone: order.customerPhone,
+          payment_mode: paymentMode,
+          order: `SC-${order.orderId}`,
+          total_amount: order.subtotal,
+          cod_amount: codAmount,
+          products_desc: desc,
+          weight: 500,
+          quantity: order.items.reduce((sum, item) => sum + item.qty, 0)
+        }
+      ],
+      pickup_location: pickupLocation
+    };
+
+    let waybill = "";
+    let delhiveryResponseData = null;
+
+    if (isMock) {
+      waybill = `DEL-${Math.floor(100000000000 + Math.random() * 900000000000)}`;
+      delhiveryResponseData = {
+        success: true,
+        packages: [{ status: "Success", waybill, refnum: `SC-${order.orderId}` }]
+      };
+      console.log("ℹ️ [Delhivery Mock] Created shipment successfully. AWB:", waybill);
+    } else {
+      const apiUrl = `${process.env.DELHIVERY_API_URL || 'https://track.delhivery.com'}/api/cmu/create.json`;
+      const formParams = new URLSearchParams();
+      formParams.append("format", "json");
+      formParams.append("data", JSON.stringify(shipmentData));
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Authorization": `Token ${token}`,
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: formParams.toString()
+      });
+
+      if (!response.ok) {
+        throw new Error(`Delhivery CMU API returned status ${response.status}`);
+      }
+
+      const responseText = await response.text();
+      try {
+        delhiveryResponseData = JSON.parse(responseText);
+      } catch (err) {
+        throw new Error(`Invalid JSON response from Delhivery API: ${responseText}`);
+      }
+
+      if (delhiveryResponseData && delhiveryResponseData.success && delhiveryResponseData.packages && delhiveryResponseData.packages.length > 0) {
+        const pkg = delhiveryResponseData.packages[0];
+        if (pkg.status === "Success" || pkg.waybill) {
+          waybill = pkg.waybill;
+        } else {
+          throw new Error(pkg.remarks || "Delhivery package creation failed.");
+        }
+      } else {
+        throw new Error(delhiveryResponseData.rmk || "Delhivery manifest creation failed.");
+      }
+    }
+
+    order.status = "Shipped";
+    order.trackingCourier = "Delhivery";
+    order.trackingNumber = waybill;
+    order.delhiveryWaybill = waybill;
+    order.delhiveryStatus = "Manifested";
+    await order.save();
+
+    const operator = req.headers['x-operator'] || "System";
+    await logAudit("DELHIVERY_SHIPMENT", `Manifested order SC-${order.orderId} via Delhivery. AWB: ${waybill}`, operator);
+
+    res.json({
+      success: true,
+      message: `Shipment manifested successfully via Delhivery.`,
+      waybill,
+      order
+    });
+  } catch (err) {
+    console.error("Delhivery Ship Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3. GET track a shipment in real-time
+app.get('/api/orders/:id/delhivery-track', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    if (!order.delhiveryWaybill) {
+      return res.status(400).json({ error: "Order has not been shipped via Delhivery yet." });
+    }
+
+    const token = process.env.DELHIVERY_API_TOKEN;
+    const isMock = !token || token === "your_delhivery_api_token_here" || order.delhiveryWaybill.startsWith("DEL-");
+
+    if (isMock) {
+      const milestoneStates = ["Manifested", "Picked Up", "In Transit", "Out for Delivery", "Delivered"];
+      let currentMilestoneIndex = milestoneStates.indexOf(order.delhiveryStatus || "Manifested");
+      if (currentMilestoneIndex === -1) currentMilestoneIndex = 0;
+      
+      // Advance to next milestone (up to Delivered) on consecutive tracking checks
+      if (currentMilestoneIndex < milestoneStates.length - 1) {
+        currentMilestoneIndex += 1;
+        order.delhiveryStatus = milestoneStates[currentMilestoneIndex];
+        if (order.delhiveryStatus === "Delivered") {
+          order.status = "Delivered";
+          order.deliveryDate = new Date().toISOString();
+        }
+        await order.save();
+      }
+
+      const milestones = [
+        { status: "Manifested", location: "Jalalpur Warehouse, Bihar", time: order.date, details: "Shipment details uploaded to Delhivery." },
+        { status: "Picked Up", location: "Jalalpur Hub, Saran", time: new Date().toISOString(), details: "Package received by pickup agent." },
+        { status: "In Transit", location: "Patna Gateway, Bihar", time: new Date().toISOString(), details: "Package sorted and forwarded." },
+        { status: "Out for Delivery", location: "Local Delivery Office", time: new Date().toISOString(), details: "Out for delivery with courier agent." },
+        { status: "Delivered", location: order.address, time: new Date().toISOString(), details: "Package delivered successfully." }
+      ];
+
+      return res.json({
+        success: true,
+        waybill: order.delhiveryWaybill,
+        status: order.delhiveryStatus,
+        history: milestones.slice(0, currentMilestoneIndex + 1),
+        isMock: true
+      });
+    }
+
+    // Call real Delhivery tracking API
+    const apiUrl = `${process.env.DELHIVERY_API_URL || 'https://track.delhivery.com'}/api/v1/packages/json/?waybill=${order.delhiveryWaybill}`;
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        "Authorization": `Token ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Delhivery Tracking API returned status ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data && data.Shipments && data.Shipments.length > 0) {
+      const sh = data.Shipments[0].Shipment;
+      const scans = sh.Scans || [];
+      const history = scans.map(s => {
+        const detail = s.ScanDetail;
+        return {
+          status: detail.Scan || "",
+          location: detail.ScannedLocation || "",
+          time: detail.ScanDateTime || "",
+          details: detail.Instructions || ""
+        };
+      });
+
+      const currentStatus = sh.Status?.Status || order.delhiveryStatus || "Manifested";
+      if (currentStatus === "Delivered" && order.status !== "Delivered") {
+        order.status = "Delivered";
+        order.deliveryDate = new Date().toISOString();
+        order.delhiveryStatus = "Delivered";
+        await order.save();
+      } else if (currentStatus && currentStatus !== order.delhiveryStatus) {
+        order.delhiveryStatus = currentStatus;
+        await order.save();
+      }
+
+      return res.json({
+        success: true,
+        waybill: order.delhiveryWaybill,
+        status: currentStatus,
+        history: history.length > 0 ? history : [
+          { status: "Manifested", location: "Jalalpur Warehouse, Bihar", time: order.date, details: "Shipment details uploaded to Delhivery." }
+        ]
+      });
+    } else {
+      throw new Error("No tracking details returned from Delhivery.");
+    }
+  } catch (err) {
+    console.error("Delhivery Tracking Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 4. GET render printable shipping label
+app.get('/api/orders/:id/delhivery-label', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).send("Order not found");
+    }
+
+    if (!order.delhiveryWaybill) {
+      return res.status(400).send("Order has not been shipped via Delhivery yet.");
+    }
+
+    const paymentMode = (order.transactionId || order.paymentScreenshot) ? "PREPAID" : "COD";
+
+    const labelHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Delhivery Shipping Label - SC-${order.orderId}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f1f5f9;
+      display: flex;
+      justify-content: center;
+    }
+    .label-container {
+      width: 400px;
+      background-color: #fff;
+      border: 2px solid #000;
+      padding: 15px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    .header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+    .payment-badge {
+      border: 2px solid #000;
+      padding: 4px 10px;
+      font-weight: bold;
+      font-size: 16px;
+      text-transform: uppercase;
+    }
+    .barcode-section {
+      text-align: center;
+      padding: 10px 0;
+      border-bottom: 2px solid #000;
+    }
+    #barcode {
+      width: 100%;
+      max-height: 80px;
+    }
+    .waybill-text {
+      font-size: 14px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    .address-section {
+      font-size: 12px;
+      line-height: 1.4;
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    .address-title {
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 11px;
+      color: #334155;
+      margin-bottom: 3px;
+    }
+    .details-table {
+      width: 100%;
+      font-size: 12px;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+    .details-table td {
+      padding: 4px 0;
+    }
+    .details-table td.label {
+      font-weight: bold;
+      color: #475569;
+    }
+    .details-table td.value {
+      text-align: right;
+      font-weight: bold;
+    }
+    .footer-note {
+      text-align: center;
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 10px;
+      border-top: 1px dashed #000;
+      padding-top: 5px;
+    }
+    @media print {
+      body {
+        background-color: #fff;
+        padding: 0;
+      }
+      .label-container {
+        box-shadow: none;
+        border: 2px solid #000;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+    .print-btn {
+      background-color: #0f172a;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+</head>
+<body>
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <button class="print-btn no-print" onclick="window.print()">Print Label</button>
+    <div class="label-container">
+      <div class="header">
+        <h2>DELHIVERY</h2>
+        <div class="payment-badge" style="\${paymentMode === 'COD' ? 'background-color: #000; color: #fff;' : ''}">
+          \${paymentMode}
+        </div>
+      </div>
+      <div class="barcode-section">
+        <svg id="barcode"></svg>
+        <div class="waybill-text">AWB: \${order.delhiveryWaybill}</div>
+      </div>
+      <div class="address-section">
+        <div class="address-title">Ship To (Consignee)</div>
+        <div style="font-weight: bold; font-size: 14px;">\${order.customerName}</div>
+        <div>Phone: \${order.customerPhone}</div>
+        <div>\${order.address}</div>
+        <div style="font-weight: bold; font-size: 13px; margin-top: 3px;">PIN: \${order.pincode || ""}</div>
+      </div>
+      <div class="address-section">
+        <div class="address-title">Ship From (Sender)</div>
+        <div style="font-weight: bold;">Smart Collection</div>
+        <div>Near Main Chowk, Jalalpur, Saran</div>
+        <div>Bihar - 841412 | Phone: 7575757575</div>
+      </div>
+      
+      <table class="details-table">
+        <tr>
+          <td class="label">Order ID:</td>
+          <td class="value">SC-\${order.orderId}</td>
+        </tr>
+        <tr>
+          <td class="label">Date:</td>
+          <td class="value">\${order.date}</td>
+        </tr>
+        <tr>
+          <td class="label">Weight / Qty:</td>
+          <td class="value">0.5 kg / \${order.items.reduce((sum, item) => sum + item.qty, 0)} Pcs</td>
+        </tr>
+        \${paymentMode === 'COD' ? \`
+        <tr>
+          <td class="label" style="font-size: 14px; color: #000;">COD Collectible:</td>
+          <td class="value" style="font-size: 14px; color: #000;">₹\${order.subtotal}</td>
+        </tr>
+        \` : \`
+        <tr>
+          <td class="label" style="font-size: 14px; color: #000;">Amount Paid:</td>
+          <td class="value" style="font-size: 14px; color: #000;">₹\${order.subtotal - order.loyaltyDiscount}</td>
+        </tr>
+        \`}
+      </table>
+      
+      <div class="footer-note">
+        Thank you for shopping at Smart Collection. For support, call 7575757575.
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    JsBarcode("#barcode", "\${order.delhiveryWaybill}", {
+      format: "CODE128",
+      lineColor: "#000",
+      width: 2,
+      height: 60,
+      displayValue: false
+    });
+  </script>
+</body>
+</html>
+    `;
+
+    res.send(labelHtml);
+  } catch (err) {
+    console.error("Delhivery Label Generation Error:", err);
+    res.status(500).send("Error generating shipping label: " + err.message);
   }
 });
 

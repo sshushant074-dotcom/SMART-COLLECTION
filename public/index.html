@@ -42,6 +42,62 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Razorpay Checkout SDK -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  
+  <!-- Delhivery Tracking Timeline Styles -->
+  <style>
+    .track-timeline-line {
+      position: absolute;
+      left: 14px;
+      top: 5px;
+      bottom: 5px;
+      width: 2px;
+      background: var(--border);
+      z-index: 1;
+    }
+    .track-milestone {
+      position: relative;
+      z-index: 2;
+    }
+    .track-milestone-dot {
+      position: absolute;
+      left: -24px;
+      top: 3px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+      border: 2px solid var(--bg-card);
+      transition: background 0.3s;
+    }
+    .track-milestone.active .track-milestone-dot {
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+    .track-milestone.current .track-milestone-dot {
+      background: #3b82f6;
+      box-shadow: 0 0 8px #3b82f6;
+      transform: scale(1.3);
+    }
+    .track-milestone-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .track-milestone-location {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .track-milestone-time {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+    .track-milestone-details {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+  </style>
 </head>
 <body class="light-theme">
   <!-- Announcement Bar -->
@@ -1563,7 +1619,11 @@
           </select>
         </div>
         <div class="form-group" id="addressFieldContainer" style="display: none;">
-          <textarea id="chkAddress" rows="2" placeholder="Delivery Address in Jalalpur (PIN: 841412) *"></textarea>
+          <textarea id="chkAddress" rows="2" placeholder="Delivery Address (Street, Landmark, City) *" style="margin-bottom: 10px;"></textarea>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="chkPincode" placeholder="Pincode *" maxlength="6" style="flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);" oninput="handlePincodeInput(this.value)">
+            <span id="delhiveryStatusText" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.05);">Enter PIN</span>
+          </div>
         </div>
         
         <!-- Loyalty points redemption -->
@@ -1778,6 +1838,30 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeExchangeModal()">Cancel</button>
         <button class="btn btn-primary" onclick="submitExchangeRequest()">Submit Request</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delhivery Live Tracking Modal -->
+  <div class="modal-backdrop" id="delhiveryTrackingModalBackdrop" style="display: none;">
+    <div class="modal-container" style="max-width: 480px; width: 90%;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-truck-fast"></i> Delhivery Live Tracking</h3>
+        <button class="close-modal-btn" onclick="closeDelhiveryTrackingModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div style="margin-bottom: 20px; text-align: center; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+          <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold;">WAYBILL / AWB</div>
+          <div style="font-size: 1.3rem; font-weight: 800; color: var(--primary); margin: 4px 0;" id="trackWaybill">DEL-XXXXXXXXXXXX</div>
+          <div style="display: inline-block; padding: 4px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: 700;" id="trackCurrentStatusBadge">Manifested</div>
+        </div>
+
+        <div style="position: relative; padding-left: 30px; display: flex; flex-direction: column; gap: 20px;" id="trackTimeline">
+          <!-- Timeline milestones will be generated dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-full" onclick="closeDelhiveryTrackingModal()">Close</button>
       </div>
     </div>
   </div>
