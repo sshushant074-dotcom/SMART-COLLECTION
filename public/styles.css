@@ -2084,10 +2084,15 @@ body.dark-theme .slider-dot {
   cursor: pointer;
 }
 
-.cart-items-container {
+.cart-drawer-body {
   flex-grow: 1;
-  padding: 24px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.cart-items-container {
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -2243,7 +2248,8 @@ body.dark-theme .slider-dot {
   box-sizing: border-box;
 }
 
-body:has(.modal-backdrop.active) {
+body:has(.modal-backdrop.active),
+body:has(#cartDrawer.active) {
   overflow: hidden;
 }
 

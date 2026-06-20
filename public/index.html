@@ -1579,82 +1579,84 @@
       <button class="close-cart-btn" onclick="toggleCart(false)"><i class="fa-solid fa-xmark"></i></button>
     </div>
     
-    <div class="cart-items-container" id="cartItemsContainer">
-      <!-- Loaded dynamically -->
-    </div>
+    <div class="cart-drawer-body">
+      <div class="cart-items-container" id="cartItemsContainer">
+        <!-- Loaded dynamically -->
+      </div>
 
-    <div class="cart-footer">
-      <div class="price-row">
-        <span>Subtotal</span>
-        <span class="total-price" id="cartSubtotal">₹0</span>
-      </div>
-      <div class="price-row" id="cartDeliveryFeeRow" style="display: none; margin-top: 4px; font-size: 0.9rem; color: var(--text-muted);">
-        <span>Delivery Fee</span>
-        <span id="cartDeliveryFee" style="font-weight: 600;">₹0</span>
-      </div>
-      <div class="price-row" id="cartGrandTotalRow" style="display: none; margin-top: 6px; border-top: 1px solid var(--border); padding-top: 6px;">
-        <span style="font-weight: 700;">Total</span>
-        <span id="cartGrandTotal" style="font-weight: 800; font-size: 1.15rem; color: var(--primary);">₹0</span>
-      </div>
-      
-      <!-- Checkout Form -->
-      <div class="checkout-form-container">
-        <h4>Delivery & Order Details</h4>
-        <div class="form-group">
-          <input type="text" id="chkName" placeholder="Full Name *" required>
+      <div class="cart-footer">
+        <div class="price-row">
+          <span>Subtotal</span>
+          <span class="total-price" id="cartSubtotal">₹0</span>
         </div>
-        <div class="form-group">
-          <input type="tel" id="chkPhone" placeholder="Mobile Number *" required>
+        <div class="price-row" id="cartDeliveryFeeRow" style="display: none; margin-top: 4px; font-size: 0.9rem; color: var(--text-muted);">
+          <span>Delivery Fee</span>
+          <span id="cartDeliveryFee" style="font-weight: 600;">₹0</span>
         </div>
-        <div class="form-group">
-          <select id="chkDeliveryMethod" onchange="toggleAddressField()" class="styled-select">
-            <option value="pickup">Self Pickup at Jalalpur Shop (Free)</option>
-            <option value="delivery">Home Delivery (Free above ₹1000, else ₹50)</option>
-          </select>
-        </div>
-        <div class="form-group" id="savedAddressesContainer" style="display: none; margin-top: 10px;">
-          <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px; font-weight: 600;">Saved Shipping Addresses:</label>
-          <select id="chkSavedAddress" onchange="useSavedAddress(this.value)" class="styled-select">
-            <!-- Rendered dynamically -->
-          </select>
-        </div>
-        <div class="form-group" id="addressFieldContainer" style="display: none;">
-          <textarea id="chkAddress" rows="2" placeholder="Delivery Address (Street, Landmark, City) *" style="margin-bottom: 10px;"></textarea>
-          <div style="display: flex; gap: 10px; align-items: center;">
-            <input type="text" id="chkPincode" placeholder="Pincode *" maxlength="6" style="flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);" oninput="handlePincodeInput(this.value)">
-            <span id="delhiveryStatusText" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.05);">Enter PIN</span>
-          </div>
+        <div class="price-row" id="cartGrandTotalRow" style="display: none; margin-top: 6px; border-top: 1px solid var(--border); padding-top: 6px;">
+          <span style="font-weight: 700;">Total</span>
+          <span id="cartGrandTotal" style="font-weight: 800; font-size: 1.15rem; color: var(--primary);">₹0</span>
         </div>
         
-        <!-- Loyalty points redemption -->
-        <div class="form-group" id="loyaltyRedeemContainer" style="display: none; border: 1px dashed var(--primary); padding: 12px; border-radius: var(--radius-md); margin-top: 15px; background: rgba(90, 82, 237, 0.03);">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <span style="font-size: 0.85rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 4px;"><i class="fa-solid fa-coins" style="color: #f59f00;"></i> Loyalty Points Wallet</span>
-              <p style="font-size: 0.75rem; color: var(--text-muted); margin: 3px 0 0 0;" id="loyaltyBalanceText">0 points available (Worth ₹0)</p>
-            </div>
-            <label class="toggle-switch-label" style="margin: 0;">
-              <input type="checkbox" id="chkRedeemLoyalty" onchange="toggleLoyaltyRedemption()">
-              <span class="toggle-slider"></span>
-            </label>
+        <!-- Checkout Form -->
+        <div class="checkout-form-container">
+          <h4>Delivery & Order Details</h4>
+          <div class="form-group">
+            <input type="text" id="chkName" placeholder="Full Name *" required>
           </div>
-          <div id="loyaltyDiscountAppliedRow" style="display: none; justify-content: space-between; font-size: 0.8rem; margin-top: 8px; color: #2ec4b6; font-weight: 700;">
-            <span>Points Discount Applied:</span>
-            <span id="loyaltyDiscountValue">-₹0</span>
+          <div class="form-group">
+            <input type="tel" id="chkPhone" placeholder="Mobile Number *" required>
+          </div>
+          <div class="form-group">
+            <select id="chkDeliveryMethod" onchange="toggleAddressField()" class="styled-select">
+              <option value="pickup">Self Pickup at Jalalpur Shop (Free)</option>
+              <option value="delivery">Home Delivery (Free above ₹1000, else ₹50)</option>
+            </select>
+          </div>
+          <div class="form-group" id="savedAddressesContainer" style="display: none; margin-top: 10px;">
+            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px; font-weight: 600;">Saved Shipping Addresses:</label>
+            <select id="chkSavedAddress" onchange="useSavedAddress(this.value)" class="styled-select">
+              <!-- Rendered dynamically -->
+            </select>
+          </div>
+          <div class="form-group" id="addressFieldContainer" style="display: none;">
+            <textarea id="chkAddress" rows="2" placeholder="Delivery Address (Street, Landmark, City) *" style="margin-bottom: 10px;"></textarea>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="text" id="chkPincode" placeholder="Pincode *" maxlength="6" style="flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);" oninput="handlePincodeInput(this.value)">
+              <span id="delhiveryStatusText" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.05);">Enter PIN</span>
+            </div>
+          </div>
+          
+          <!-- Loyalty points redemption -->
+          <div class="form-group" id="loyaltyRedeemContainer" style="display: none; border: 1px dashed var(--primary); padding: 12px; border-radius: var(--radius-md); margin-top: 15px; background: rgba(90, 82, 237, 0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 4px;"><i class="fa-solid fa-coins" style="color: #f59f00;"></i> Loyalty Points Wallet</span>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 3px 0 0 0;" id="loyaltyBalanceText">0 points available (Worth ₹0)</p>
+              </div>
+              <label class="toggle-switch-label" style="margin: 0;">
+                <input type="checkbox" id="chkRedeemLoyalty" onchange="toggleLoyaltyRedemption()">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div id="loyaltyDiscountAppliedRow" style="display: none; justify-content: space-between; font-size: 0.8rem; margin-top: 8px; color: #2ec4b6; font-weight: 700;">
+              <span>Points Discount Applied:</span>
+              <span id="loyaltyDiscountValue">-₹0</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="checkout-actions">
-        <button class="btn btn-whatsapp btn-full" onclick="checkoutWhatsApp()">
-          <i class="fa-brands fa-whatsapp"></i> Confirm & Send Invoice on WhatsApp
-        </button>
-        <button class="btn btn-primary btn-full" onclick="payWithRazorpay()" style="background: linear-gradient(135deg, #1f72e5 0%, #1257c4 100%); border: none; color: white;">
-          <i class="fa-solid fa-credit-card"></i> Pay Online (Razorpay)
-        </button>
-        <button class="btn btn-secondary btn-full" onclick="openPaymentModal()">
-          <i class="fa-solid fa-qrcode"></i> Simulated Pay / Upload Screenshot
-        </button>
+        <div class="checkout-actions">
+          <button class="btn btn-whatsapp btn-full" onclick="checkoutWhatsApp()">
+            <i class="fa-brands fa-whatsapp"></i> Confirm & Send Invoice on WhatsApp
+          </button>
+          <button class="btn btn-primary btn-full" onclick="payWithRazorpay()" style="background: linear-gradient(135deg, #1f72e5 0%, #1257c4 100%); border: none; color: white;">
+            <i class="fa-solid fa-credit-card"></i> Pay Online (Razorpay)
+          </button>
+          <button class="btn btn-secondary btn-full" onclick="openPaymentModal()">
+            <i class="fa-solid fa-qrcode"></i> Simulated Pay / Upload Screenshot
+          </button>
+        </div>
       </div>
     </div>
   </div>
