@@ -1966,9 +1966,9 @@ function checkoutWhatsApp() {
   text += `👤 *Customer Details:*\n`;
   text += `• Name: ${form.name}\n`;
   text += `• Contact: ${form.phone}\n`;
-  text += `• Delivery Type: ${form.delivery === 'pickup' ? 'Self Pickup at Jalalpur Shop' : 'Local Home Delivery'}\n`;
+  text += `• Delivery Type: ${form.delivery === 'pickup' ? 'Self Pickup at Jalalpur Shop' : 'Delhivery Home Delivery'}\n`;
   if (form.delivery === 'delivery') {
-    text += `• Address: ${form.address}\n`;
+    text += `• Address: ${form.address} (PIN: ${form.pincode})\n`;
   }
   text += `\n📦 *Order Items:*\n`;
 
@@ -2362,11 +2362,11 @@ async function handlePincodeInput(pincode) {
     const res = await fetch(`/api/delhivery/check-pincode?pincode=${pincode}`);
     const data = await res.json();
     if (data && data.serviceable) {
-      statusText.innerHTML = '<i class="fa-solid fa-circle-check"></i> Serviceable (' + (data.estDeliveryDays || 5) + ' days)';
+      statusText.innerHTML = '<i class="fa-solid fa-circle-check"></i> Delhivery Serviceable (' + (data.estDeliveryDays || 5) + ' days)';
       statusText.style.color = "#10b981";
       statusText.style.background = "rgba(16, 185, 129, 0.1)";
     } else {
-      statusText.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Not Serviceable (Fallback via Post)';
+      statusText.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Delhivery Unserviceable (Post Fallback)';
       statusText.style.color = "#f59f00";
       statusText.style.background = "rgba(245, 159, 0, 0.1)";
     }
@@ -2696,8 +2696,8 @@ function renderHistory() {
         ${courierHtml}
         <div class="history-card-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div class="delivery-info">
-            <strong>Method:</strong> ${order.delivery === 'pickup' ? 'Pickup at Shop' : 'Local Delivery'}
-            ${order.delivery === 'delivery' ? `<br><small>${order.address}</small>` : ''}
+            <strong>Method:</strong> ${order.delivery === 'pickup' ? 'Pickup at Shop' : (order.trackingCourier === 'Delhivery' ? 'Delhivery Shipping' : 'Local Delivery')}
+            ${order.delivery === 'delivery' ? `<br><small>${order.address} (PIN: ${order.pincode || ''})</small>` : ''}
           </div>
           <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
             <div class="order-total">Total: ₹${order.subtotal}</div>
