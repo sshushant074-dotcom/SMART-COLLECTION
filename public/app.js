@@ -1753,6 +1753,16 @@ function updateCartUI() {
     }
   }
 
+  // Toggle COD button based on final payment total > 1499
+  const btnCOD = document.getElementById("btnCOD");
+  if (btnCOD) {
+    if (grandTotal > 1499) {
+      btnCOD.style.display = "block";
+    } else {
+      btnCOD.style.display = "none";
+    }
+  }
+
   // Refresh wishlist recommendations if viewing the wishlist tab
   const activeTabLink = document.querySelector(".nav-link.active");
   if (activeTabLink && activeTabLink.id === "nav-wishlist") {
@@ -2490,6 +2500,79 @@ async function trackDelhiveryShipment(dbId, orderId) {
 
 function closeDelhiveryTrackingModal() {
   document.getElementById("delhiveryTrackingModalBackdrop").classList.remove("active");
+}
+
+async function placeCODOrder() {
+  const form = validateCheckoutForm();
+  if (!form) return;
+  if (cart.length === 0) {
+    alert("Your cart is empty!");
+    return;
+  }
+
+  const confirmCOD = confirm("Confirm placing this order as Cash on Delivery (COD)?");
+  if (!confirmCOD) return;
+
+  let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  
+  // Calculate points discount
+  let loyaltyDiscount = 0;
+  let pointsRedeemed = 0;
+  const chkRedeem = document.getElementById("chkRedeemLoyalty");
+  if (currentCustomer && chkRedeem && chkRedeem.checked && currentCustomer.loyaltyPoints >= 200) {
+    pointsRedeemed = Math.min(currentCustomer.loyaltyPoints, subtotal * 2);
+    loyaltyDiscount = pointsRedeemed * 0.5;
+  }
+
+  const orderId = `SC-${Date.now().toString().slice(-6)}`;
+  
+  const newOrderData = {
+    orderId: orderId,
+    date: new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    items: cart.map(item => ({
+      productId: item.id,
+      name: `${item.name} (Size: ${item.size})`,
+      price: item.price,
+      image: item.image,
+      qty: item.qty
+    })),
+    subtotal: subtotal,
+    delivery: form.delivery,
+    address: form.address,
+    pincode: form.pincode || "",
+    customerName: form.name,
+    customerPhone: form.phone,
+    customerEmail: (currentCustomer && currentCustomer.email) ? currentCustomer.email : "",
+    redeemPoints: pointsRedeemed > 0,
+    pointsRedeemed: pointsRedeemed,
+    transactionId: "",
+    paymentScreenshot: ""
+  };
+
+  const deliveryFee = (form.delivery === 'delivery' && subtotal < 1000) ? 50 : 0;
+
+  try {
+    // Post to Server
+    await fetchFromApi('/api/orders', {
+      method: 'POST',
+      body: JSON.stringify(newOrderData)
+    });
+
+    // Clear Cart
+    cart = [];
+    saveCart();
+    updateCartUI();
+
+    toggleCart(false);
+    
+    alert(`🎉 Cash on Delivery (COD) Order Placed Successfully!\nOrder ID: ${orderId}\nTotal collectible: ₹${(subtotal + deliveryFee - loyaltyDiscount).toFixed(2)}`);
+
+    // Reload state
+    await loadAllData();
+    showTab("history");
+  } catch (err) {
+    alert(`COD Checkout failed: ${err.message}`);
+  }
 }
 
 // ==========================================================================
