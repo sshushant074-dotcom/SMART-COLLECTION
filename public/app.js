@@ -2334,6 +2334,8 @@ async function payWithRazorpay() {
     const rzp = new Razorpay(options);
     rzp.open();
 
+  } catch (err) {
+    alert(`Payment initialization failed: ${err.message}`);
   }
 }
 
