@@ -1420,6 +1420,15 @@ async function processAndSaveOrder(orderData, status = "Order Received", operato
     console.log(`[LOYALTY UPDATE] Customer ${customer.name}: Redeemed ${pointsRedeemed} pts (-₹${loyaltyDiscount}), Earned ${pointsEarned} pts. New Balance: ${customer.loyaltyPoints}`);
   }
 
+  // Server-side validation for COD threshold
+  if (orderData.transactionId === "COD") {
+    const deliveryFee = (orderData.delivery === "delivery" && orderData.subtotal < 1000) ? 50 : 0;
+    const finalAmount = orderData.subtotal + deliveryFee - loyaltyDiscount;
+    if (finalAmount <= 1499) {
+      throw new Error("Cash on Delivery (COD) is only available for orders above ₹1499.");
+    }
+  }
+
   // Save order model
   const items = orderData.items.map(item => ({
     productId: item.productId || item.id,
