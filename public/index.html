@@ -40,6 +40,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Razorpay Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body class="light-theme">
   <!-- Announcement Bar -->
@@ -1587,8 +1589,11 @@
         <button class="btn btn-whatsapp btn-full" onclick="checkoutWhatsApp()">
           <i class="fa-brands fa-whatsapp"></i> Confirm & Send Invoice on WhatsApp
         </button>
-        <button class="btn btn-primary btn-full" onclick="openPaymentModal()">
-          <i class="fa-solid fa-credit-card"></i> Pay Securely Online / At Shop
+        <button class="btn btn-primary btn-full" onclick="payWithRazorpay()" style="background: linear-gradient(135deg, #1f72e5 0%, #1257c4 100%); border: none; color: white;">
+          <i class="fa-solid fa-credit-card"></i> Pay Online (Razorpay)
+        </button>
+        <button class="btn btn-secondary btn-full" onclick="openPaymentModal()">
+          <i class="fa-solid fa-qrcode"></i> Simulated Pay / Upload Screenshot
         </button>
       </div>
     </div>

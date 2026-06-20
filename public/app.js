@@ -2189,6 +2189,147 @@ async function simulatePaymentSuccess() {
   }
 }
 
+async function payWithRazorpay() {
+  const form = validateCheckoutForm();
+  if (!form) return;
+  if (cart.length === 0) {
+    alert("Your cart is empty!");
+    return;
+  }
+
+  let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  
+  // Calculate points discount
+  let loyaltyDiscount = 0;
+  let pointsRedeemed = 0;
+  const chkRedeem = document.getElementById("chkRedeemLoyalty");
+  if (currentCustomer && chkRedeem && chkRedeem.checked && currentCustomer.loyaltyPoints >= 200) {
+    pointsRedeemed = Math.min(currentCustomer.loyaltyPoints, subtotal * 2);
+    loyaltyDiscount = pointsRedeemed * 0.5; // 1 point = ₹0.50 when points >= 200
+  }
+
+  const orderId = `SC-${Date.now().toString().slice(-6)}`;
+  
+  const orderDetails = {
+    orderId: orderId,
+    date: new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    items: cart.map(item => ({
+      productId: item.id,
+      name: `${item.name} (Size: ${item.size})`,
+      price: item.price,
+      image: item.image,
+      qty: item.qty
+    })),
+    subtotal: subtotal,
+    delivery: form.delivery,
+    address: form.address,
+    customerName: form.name,
+    customerPhone: form.phone,
+    customerEmail: (currentCustomer && currentCustomer.email) ? currentCustomer.email : "",
+    redeemPoints: pointsRedeemed > 0,
+    pointsRedeemed: pointsRedeemed
+  };
+
+  try {
+    // Show loading indicator
+    const btn = document.querySelector("button[onclick='payWithRazorpay()']");
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Initializing Payment...`;
+    btn.disabled = true;
+
+    // 1. Create order on backend
+    const razorpayOrder = await fetchFromApi('/api/razorpay/create-order', {
+      method: 'POST',
+      body: JSON.stringify({
+        items: orderDetails.items,
+        delivery: orderDetails.delivery,
+        pointsRedeemed: orderDetails.pointsRedeemed,
+        customerPhone: orderDetails.customerPhone,
+        customerEmail: orderDetails.customerEmail
+      })
+    });
+
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+
+    if (!razorpayOrder || !razorpayOrder.id) {
+      throw new Error("Failed to initialize payment order on server.");
+    }
+
+    // 2. Configure and Open Razorpay Checkout Pop-up
+    const options = {
+      key: razorpayOrder.key_id,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency,
+      name: "Smart Collection Boutique",
+      description: `Purchase for ${orderDetails.customerName}`,
+      image: "images/logo.jpg",
+      order_id: razorpayOrder.id,
+      handler: async function (response) {
+        try {
+          // Show verifying status
+          btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Verifying Payment...`;
+          btn.disabled = true;
+
+          // 3. Verify payment signature and save order on backend
+          const verificationResult = await fetchFromApi('/api/razorpay/verify-payment', {
+            method: 'POST',
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderDetails: orderDetails
+            })
+          });
+
+          if (verificationResult && verificationResult.success) {
+            // Clear Cart
+            cart = [];
+            saveCart();
+            updateCartUI();
+            toggleCart(false);
+
+            alert(`🎉 Payment Successful & Order Placed!\nOrder ID: ${orderId}\nPayment ID: ${response.razorpay_payment_id}`);
+
+            // Reload state
+            await loadAllData();
+            showTab("history");
+          } else {
+            throw new Error(verificationResult.error || "Verification failed");
+          }
+        } catch (verifyErr) {
+          alert(`⚠️ Payment verification failed: ${verifyErr.message}\nIf money was deducted, please contact support with order ref: ${orderId}`);
+        } finally {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
+      },
+      prefill: {
+        name: orderDetails.customerName,
+        email: orderDetails.customerEmail,
+        contact: orderDetails.customerPhone
+      },
+      notes: {
+        shop_address: "Jalalpur, Saran, Bihar"
+      },
+      theme: {
+        color: "#8B1538" // Burgundy brand color matching the boutique theme
+      },
+      modal: {
+        ondismiss: function() {
+          console.log("Razorpay Checkout dismissed by user");
+        }
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+
+  } catch (err) {
+    alert(`Payment initialization failed: ${err.message}`);
+  }
+}
+
 // ==========================================================================
 // Order History, Reviews & Exchanges (MongoDB)
 // ==========================================================================

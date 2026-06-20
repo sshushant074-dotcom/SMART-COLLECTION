@@ -1328,20 +1328,158 @@ app.get('/api/orders', async (req, res) => {
   }
 });
 
-// 2. POST submit new order
+// Reusable helper function to process stock decrement, loyalty updates, and save order
+async function processAndSaveOrder(orderData, status = "Order Received", operator = "System") {
+  let cleanPhone = orderData.customerPhone.replace(/\D/g, "");
+  if (cleanPhone.length === 12 && cleanPhone.startsWith("91")) {
+    cleanPhone = cleanPhone.slice(2);
+  } else if (cleanPhone.length === 11 && cleanPhone.startsWith("0")) {
+    cleanPhone = cleanPhone.slice(1);
+  }
+
+  // Resolve prices server-side to prevent tampering or handle expired sales
+  const active = await isFlashSaleCurrentlyActive();
+  let calculatedSubtotal = 0;
+  for (const item of orderData.items) {
+    const dbProduct = await Product.findById(item.productId || item.id);
+    if (!dbProduct) {
+      throw new Error(`Product not found`);
+    }
+    const resolvedPrice = (active && dbProduct.salePrice && dbProduct.salePrice < dbProduct.price) 
+      ? dbProduct.salePrice 
+      : dbProduct.price;
+    item.price = resolvedPrice;
+    calculatedSubtotal += resolvedPrice * item.qty;
+  }
+  orderData.subtotal = calculatedSubtotal;
+
+  // Decrement stocks for all checkout items
+  for (const item of orderData.items) {
+    const dbProduct = await Product.findById(item.productId || item.id);
+    if (dbProduct) {
+      dbProduct.stock = Math.max(0, dbProduct.stock - item.qty);
+      if (dbProduct.stock === 0) {
+        dbProduct.available = false;
+      }
+      await dbProduct.save();
+    }
+  }
+
+  // Process Loyalty points deduction and additions
+  let loyaltyDiscount = 0;
+  let pointsRedeemed = 0;
+  
+  let customer = null;
+  if (orderData.customerEmail) {
+    customer = await Customer.findOne({ $or: [{ phone: cleanPhone }, { email: orderData.customerEmail }] });
+  } else {
+    customer = await Customer.findOne({ phone: cleanPhone });
+  }
+  
+  if (customer) {
+    // Link phone number to Google user profile if not set and not already taken
+    if (!customer.phone && cleanPhone) {
+      const phoneExists = await Customer.findOne({ phone: cleanPhone });
+      if (!phoneExists) {
+        customer.phone = cleanPhone;
+      }
+    }
+
+    if (customer.loyaltyPoints >= 200 && orderData.pointsRedeemed) {
+      pointsRedeemed = Math.min(customer.loyaltyPoints, parseInt(orderData.pointsRedeemed) || 0);
+      loyaltyDiscount = pointsRedeemed * 0.5; // 1 point = ₹0.50 when points >= 200
+      
+      // Deduct points from profile
+      customer.loyaltyPoints -= pointsRedeemed;
+    }
+
+    // Check if this is their first completed order to credit referral points to referrer
+    const query = { $or: [{ customerPhone: cleanPhone }] };
+    if (customer.email) {
+      query.$or.push({ customerEmail: customer.email });
+    }
+    const previousOrdersCount = await Order.countDocuments(query);
+    if (previousOrdersCount === 0 && customer.referredBy) {
+      const referrer = await Customer.findOne({ referralCode: customer.referredBy });
+      if (referrer) {
+        referrer.loyaltyPoints += 100; // Referrer gets 100 points
+        await referrer.save();
+        console.log(`[REFERRAL BONUS] Referrer ${referrer.phone || referrer.email} awarded 100 points for first purchase of customer ${cleanPhone}`);
+      }
+    }
+
+    // Earn points on current order (1 point for every ₹10 spent on final subtotal)
+    const finalPaidAmount = Math.max(0, orderData.subtotal - loyaltyDiscount);
+    const pointsEarned = Math.floor(finalPaidAmount / 10);
+    customer.loyaltyPoints += pointsEarned;
+    
+    await customer.save();
+    console.log(`[LOYALTY UPDATE] Customer ${customer.name}: Redeemed ${pointsRedeemed} pts (-₹${loyaltyDiscount}), Earned ${pointsEarned} pts. New Balance: ${customer.loyaltyPoints}`);
+  }
+
+  // Save order model
+  const items = orderData.items.map(item => ({
+    productId: item.productId || item.id,
+    name: item.name,
+    price: item.price,
+    image: item.image,
+    qty: item.qty
+  }));
+
+  const newOrder = new Order({
+    orderId: orderData.orderId,
+    date: orderData.date,
+    items: items,
+    subtotal: orderData.subtotal,
+    delivery: orderData.delivery,
+    address: orderData.address,
+    customerName: orderData.customerName,
+    customerPhone: orderData.customerPhone,
+    customerEmail: orderData.customerEmail || "",
+    status: status,
+    loyaltyDiscount: loyaltyDiscount,
+    pointsRedeemed: pointsRedeemed,
+    transactionId: orderData.transactionId || "",
+    paymentScreenshot: orderData.paymentScreenshot || ""
+  });
+
+  await newOrder.save();
+  await logAudit("ORDER_CREATE", `Placed new order SC-${newOrder.orderId} containing ${newOrder.items.length} items. Total: ₹${newOrder.subtotal}. Status: ${status}.`, operator);
+  return newOrder;
+}
+
+// 2. POST submit new order (Standard/COD/Simulated)
 app.post('/api/orders', async (req, res) => {
   try {
     const orderData = req.body;
-    let cleanPhone = orderData.customerPhone.replace(/\D/g, "");
-    if (cleanPhone.length === 12 && cleanPhone.startsWith("91")) {
-      cleanPhone = cleanPhone.slice(2);
-    } else if (cleanPhone.length === 11 && cleanPhone.startsWith("0")) {
-      cleanPhone = cleanPhone.slice(1);
+    const operator = req.headers['x-operator'] || "System";
+    const newOrder = await processAndSaveOrder(orderData, "Order Received", operator);
+    res.status(201).json(newOrder);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Razorpay SDK Instance Init
+const Razorpay = require('razorpay');
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'placeholder_secret'
+});
+
+// 2b. POST create Razorpay Order
+app.post('/api/razorpay/create-order', async (req, res) => {
+  try {
+    const { items, delivery, pointsRedeemed, customerPhone, customerEmail } = req.body;
+    
+    if (!items || !items.length) {
+      return res.status(400).json({ error: "Cart is empty" });
     }
-    // Resolve prices server-side to prevent tampering or handle expired sales
+
+    // Recalculate subtotal server-side to prevent client price injection/tampering
     const active = await isFlashSaleCurrentlyActive();
     let calculatedSubtotal = 0;
-    for (const item of orderData.items) {
+    for (const item of items) {
       const dbProduct = await Product.findById(item.productId || item.id);
       if (!dbProduct) {
         return res.status(404).json({ error: `Product not found` });
@@ -1349,107 +1487,106 @@ app.post('/api/orders', async (req, res) => {
       const resolvedPrice = (active && dbProduct.salePrice && dbProduct.salePrice < dbProduct.price) 
         ? dbProduct.salePrice 
         : dbProduct.price;
-      item.price = resolvedPrice;
       calculatedSubtotal += resolvedPrice * item.qty;
     }
-    orderData.subtotal = calculatedSubtotal;
 
-    // Decrement stocks for all checkout items
-    for (const item of orderData.items) {
-      const dbProduct = await Product.findById(item.productId || item.id);
-      if (dbProduct) {
-        dbProduct.stock = Math.max(0, dbProduct.stock - item.qty);
-        if (dbProduct.stock === 0) {
-          dbProduct.available = false;
-        }
-        await dbProduct.save();
-      }
+    // Calculate delivery fee
+    let deliveryFee = 0;
+    if (delivery === 'delivery' && calculatedSubtotal < 1000) {
+      deliveryFee = 50;
     }
 
-    // Process Loyalty points deduction and additions
+    // Calculate loyalty points discount
     let loyaltyDiscount = 0;
-    let pointsRedeemed = 0;
-    
-    let customer = null;
-    if (orderData.customerEmail) {
-      customer = await Customer.findOne({ $or: [{ phone: cleanPhone }, { email: orderData.customerEmail }] });
-    } else {
-      customer = await Customer.findOne({ phone: cleanPhone });
-    }
-    
-    if (customer) {
-      // Link phone number to Google user profile if not set and not already taken
-      if (!customer.phone && cleanPhone) {
-        const phoneExists = await Customer.findOne({ phone: cleanPhone });
-        if (!phoneExists) {
-          customer.phone = cleanPhone;
-        }
+    if (customerPhone) {
+      let cleanPhone = customerPhone.replace(/\D/g, "");
+      if (cleanPhone.length === 12 && cleanPhone.startsWith("91")) {
+        cleanPhone = cleanPhone.slice(2);
+      } else if (cleanPhone.length === 11 && cleanPhone.startsWith("0")) {
+        cleanPhone = cleanPhone.slice(1);
       }
-
-      if (customer.loyaltyPoints >= 200 && orderData.redeemPoints && orderData.pointsRedeemed) {
-        pointsRedeemed = Math.min(customer.loyaltyPoints, parseInt(orderData.pointsRedeemed) || 0);
-        loyaltyDiscount = pointsRedeemed * 0.5; // 1 point = ₹0.50 when points >= 200
-        
-        // Deduct points from profile
-        customer.loyaltyPoints -= pointsRedeemed;
-      }
-
-      // Check if this is their first completed order to credit referral points to referrer
-      const query = { $or: [{ customerPhone: cleanPhone }] };
-      if (customer.email) {
-        query.$or.push({ customerEmail: customer.email });
-      }
-      const previousOrdersCount = await Order.countDocuments(query);
-      if (previousOrdersCount === 0 && customer.referredBy) {
-        const referrer = await Customer.findOne({ referralCode: customer.referredBy });
-        if (referrer) {
-          referrer.loyaltyPoints += 100; // Referrer gets 100 points
-          await referrer.save();
-          console.log(`[REFERRAL BONUS] Referrer ${referrer.phone || referrer.email} awarded 100 points for first purchase of customer ${cleanPhone}`);
-        }
-      }
-
-      // Earn points on current order (1 point for every ₹10 spent on final subtotal)
-      const finalPaidAmount = Math.max(0, orderData.subtotal - loyaltyDiscount);
-      const pointsEarned = Math.floor(finalPaidAmount / 10);
-      customer.loyaltyPoints += pointsEarned;
       
-      await customer.save();
-      console.log(`[LOYALTY UPDATE] Customer ${customer.name}: Redeemed ${pointsRedeemed} pts (-₹${loyaltyDiscount}), Earned ${pointsEarned} pts. New Balance: ${customer.loyaltyPoints}`);
+      let customer = null;
+      if (customerEmail) {
+        customer = await Customer.findOne({ $or: [{ phone: cleanPhone }, { email: customerEmail }] });
+      } else {
+        customer = await Customer.findOne({ phone: cleanPhone });
+      }
+
+      if (customer && customer.loyaltyPoints >= 200 && pointsRedeemed) {
+        const points = Math.min(customer.loyaltyPoints, parseInt(pointsRedeemed) || 0);
+        loyaltyDiscount = points * 0.5;
+      }
     }
 
-    // Save order model
-    const items = orderData.items.map(item => ({
-      productId: item.productId || item.id,
-      name: item.name,
-      price: item.price,
-      image: item.image,
-      qty: item.qty
-    }));
+    const finalAmount = Math.max(0, calculatedSubtotal + deliveryFee - loyaltyDiscount);
 
-    const newOrder = new Order({
-      orderId: orderData.orderId,
-      date: orderData.date,
-      items: items,
-      subtotal: orderData.subtotal,
-      delivery: orderData.delivery,
-      address: orderData.address,
-      customerName: orderData.customerName,
-      customerPhone: orderData.customerPhone,
-      customerEmail: orderData.customerEmail || "",
-      status: "Order Received",
-      loyaltyDiscount: loyaltyDiscount,
-      pointsRedeemed: pointsRedeemed,
-      transactionId: orderData.transactionId || "",
-      paymentScreenshot: orderData.paymentScreenshot || ""
+    // Call Razorpay orders API to register order
+    const options = {
+      amount: Math.round(finalAmount * 100), // in paise subunits
+      currency: "INR",
+      receipt: `rcpt_${Date.now().toString().slice(-6)}`
+    };
+
+    let order;
+    if (process.env.RAZORPAY_KEY_ID === 'rzp_test_placeholder' || !process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_KEY_SECRET === 'placeholder_secret') {
+      console.log("⚠️ Using mock Razorpay order creation due to placeholder credentials.");
+      order = {
+        id: `order_mock_${Math.random().toString(36).substring(2, 10)}`,
+        amount: options.amount,
+        currency: options.currency
+      };
+    } else {
+      order = await razorpay.orders.create(options);
+    }
+    
+    res.json({
+      id: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder'
     });
-
-    await newOrder.save();
-    const operator = req.headers['x-operator'] || "System";
-    await logAudit("ORDER_CREATE", `Placed new order SC-${newOrder.orderId} containing ${newOrder.items.length} items. Total: ₹${newOrder.subtotal}.`, operator);
-    res.status(201).json(newOrder);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error("Razorpay Create Order Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 2c. POST verify Razorpay Payment Signature
+app.post('/api/razorpay/verify-payment', async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderDetails } = req.body;
+    
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderDetails) {
+      return res.status(400).json({ error: "Missing required verification fields" });
+    }
+
+    const crypto = require('crypto');
+    const text = razorpay_order_id + "|" + razorpay_payment_id;
+    let expectedSignature;
+    if (razorpay_order_id.startsWith("order_mock_")) {
+      console.log("⚠️ Bypassing real signature verification for mock Razorpay order.");
+      expectedSignature = razorpay_signature; // bypass verification for mock test orders
+    } else {
+      expectedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'placeholder_secret')
+        .update(text)
+        .digest('hex');
+    }
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ error: "Payment verification failed: Signature mismatch" });
+    }
+
+    // Save order details to MongoDB with status "Paid & Ordered"
+    orderDetails.transactionId = razorpay_payment_id;
+    const operator = req.headers['x-operator'] || "System";
+    const savedOrder = await processAndSaveOrder(orderDetails, "Paid & Ordered", operator);
+
+    res.status(201).json({ success: true, order: savedOrder });
+  } catch (err) {
+    console.error("Razorpay Verify Payment Error:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 

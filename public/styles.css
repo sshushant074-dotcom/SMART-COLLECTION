@@ -298,7 +298,7 @@ body.dark-theme .main-header {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, var(--hero-overlay-start) 0%, var(--hero-overlay-end) 100%);
+  background: linear-gradient(135deg, rgba(139, 21, 56, 0.7), rgba(184, 134, 11, 0.7));
   z-index: 1;
 }
 
@@ -670,7 +670,7 @@ body.dark-theme .slider-dot {
 }
 
 .hero-subtitle {
-  color: var(--primary);
+  color: #ffe082; /* premium warm gold color */
   font-weight: 700;
   font-size: 1rem;
   text-transform: uppercase;
@@ -678,20 +678,20 @@ body.dark-theme .slider-dot {
   margin-bottom: 12px;
 }
 
-.hero-title {
+.hero-title, .hero-content h1 {
   font-family: var(--font-heading);
-  font-size: 3.8rem;
+  font-size: clamp(3rem, 6vw, 5rem);
   font-weight: 700;
   line-height: 1.15;
   margin-bottom: 20px;
-  background: linear-gradient(135deg, var(--text) 50%, var(--primary));
+  background: linear-gradient(135deg, #ffffff 60%, #ffd54f);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .hero-description {
   font-size: 1.15rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.9); /* highly readable white with slight opacity */
   margin-bottom: 35px;
   max-width: 600px;
 }
