@@ -1762,7 +1762,7 @@ app.get('/api/delhivery/check-pincode', async (req, res) => {
     const data = await response.json();
     if (data && data.delivery_codes && data.delivery_codes.length > 0) {
       const codeInfo = data.delivery_codes[0].postal_code;
-      const isPrepaid = codeInfo.prepaid === 'Y';
+      const isPrepaid = codeInfo.pre_paid === 'Y' || codeInfo.prepaid === 'Y';
       const isCod = codeInfo.cod === 'Y';
       const isServiceable = isPrepaid || isCod;
 
@@ -1886,15 +1886,20 @@ app.post('/api/orders/:id/delhivery-ship', async (req, res) => {
         throw new Error(`Invalid JSON response from Delhivery API: ${responseText}`);
       }
 
-      if (delhiveryResponseData && delhiveryResponseData.success && delhiveryResponseData.packages && delhiveryResponseData.packages.length > 0) {
-        const pkg = delhiveryResponseData.packages[0];
-        if (pkg.status === "Success" || pkg.waybill) {
-          waybill = pkg.waybill;
+      if (delhiveryResponseData) {
+        if (delhiveryResponseData.packages && delhiveryResponseData.packages.length > 0) {
+          const pkg = delhiveryResponseData.packages[0];
+          if (pkg.status === "Success" || (pkg.waybill && pkg.status !== "Fail")) {
+            waybill = pkg.waybill;
+          } else {
+            const remarksText = Array.isArray(pkg.remarks) ? pkg.remarks.join(", ") : (pkg.remarks || "");
+            throw new Error(remarksText || "Delhivery package creation failed.");
+          }
         } else {
-          throw new Error(pkg.remarks || "Delhivery package creation failed.");
+          throw new Error(delhiveryResponseData.rmk || "Delhivery manifest creation failed.");
         }
       } else {
-        throw new Error(delhiveryResponseData.rmk || "Delhivery manifest creation failed.");
+        throw new Error("Empty response received from Delhivery API.");
       }
     }
 
