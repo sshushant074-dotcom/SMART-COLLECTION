@@ -8,6 +8,7 @@
   "background_color": "#0a0a0c",
   "theme_color": "#18181b",
   "orientation": "portrait",
+  "categories": ["shopping", "fashion"],
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -20,6 +21,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/girls.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Girls Wear Collection"
+    },
+    {
+      "src": "/images/men.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Men Wear Collection"
     }
   ]
 }
