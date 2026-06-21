@@ -196,8 +196,9 @@ const BannerSchema = new mongoose.Schema({
   ctaTab: { type: String, default: "shop" },
   categoryFilter: { type: String, default: "" },
   isActive: { type: Boolean, default: true },
-  order: { type: Number, default: 0 }
+  order: { type: Number, default: 0, index: true }
 });
+BannerSchema.index({ isActive: 1, order: 1 });
 const Banner = mongoose.model('Banner', BannerSchema);
 
 // Schema 10: Bundle Model
@@ -2470,7 +2471,7 @@ app.get('/api/audit-logs', async (req, res) => {
 // 1. GET all banners (both active and inactive for admin)
 app.get('/api/banners', async (req, res) => {
   try {
-    const banners = await Banner.find().sort({ order: 1 }).allowDiskUse();
+    const banners = await Banner.find().sort({ order: 1 }).allowDiskUse(true);
     res.json(banners);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -2480,7 +2481,7 @@ app.get('/api/banners', async (req, res) => {
 // 2. GET active banners for storefront
 app.get('/api/banners/active', async (req, res) => {
   try {
-    const active = await Banner.find({ isActive: true }).sort({ order: 1 }).allowDiskUse();
+    const active = await Banner.find({ isActive: true }).sort({ order: 1 }).allowDiskUse(true);
     res.json(active);
   } catch (err) {
     res.status(500).json({ error: err.message });
