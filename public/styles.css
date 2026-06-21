@@ -1237,6 +1237,7 @@ body.dark-theme .slider-dot {
 }
 
 .toggle-slider {
+  display: inline-block;
   width: 44px;
   height: 24px;
   background-color: var(--border);
