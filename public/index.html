@@ -1646,17 +1646,11 @@
           </div>
         </div>
 
-        <div class="checkout-actions">
-          <button class="btn btn-whatsapp btn-full" onclick="checkoutWhatsApp()">
-            <i class="fa-brands fa-whatsapp"></i> Confirm & Send Invoice on WhatsApp
+        <div class="checkout-actions" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+          <button class="btn btn-primary btn-full" onclick="payWithRazorpay()" style="background: linear-gradient(135deg, #1f72e5 0%, #1257c4 100%); border: none; color: white; padding: 12px 20px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
+            <i class="fa-solid fa-credit-card"></i> Pay Securely Online (Razorpay)
           </button>
-          <button class="btn btn-primary btn-full" onclick="payWithRazorpay()" style="background: linear-gradient(135deg, #1f72e5 0%, #1257c4 100%); border: none; color: white;">
-            <i class="fa-solid fa-credit-card"></i> Pay Online (Razorpay)
-          </button>
-          <button class="btn btn-secondary btn-full" onclick="openPaymentModal()">
-            <i class="fa-solid fa-qrcode"></i> Simulated Pay / Upload Screenshot
-          </button>
-          <button class="btn btn-full" id="btnCOD" onclick="placeCODOrder()" style="background: linear-gradient(135deg, #f59f00 0%, #d97706 100%); border: none; color: white; display: none; font-weight: 700;">
+          <button class="btn btn-full" id="btnCOD" onclick="placeCODOrder()" style="background: linear-gradient(135deg, #f59f00 0%, #d97706 100%); border: none; color: white; font-weight: 600; padding: 12px 20px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
             <i class="fa-solid fa-hand-holding-dollar"></i> Cash on Delivery (COD)
           </button>
         </div>

@@ -1753,14 +1753,10 @@ function updateCartUI() {
     }
   }
 
-  // Toggle COD button based on final payment total > 1499
+  // Show Cash on Delivery (COD) button always
   const btnCOD = document.getElementById("btnCOD");
   if (btnCOD) {
-    if (grandTotal > 1499) {
-      btnCOD.style.display = "block";
-    } else {
-      btnCOD.style.display = "none";
-    }
+    btnCOD.style.display = "flex";
   }
 
   // Refresh wishlist recommendations if viewing the wishlist tab
@@ -2500,6 +2496,54 @@ async function trackDelhiveryShipment(dbId, orderId) {
 
 function closeDelhiveryTrackingModal() {
   document.getElementById("delhiveryTrackingModalBackdrop").classList.remove("active");
+}
+
+async function manualWhatsAppBill(dbId) {
+  try {
+    const order = orders.find(o => o._id === dbId);
+    if (!order) {
+      alert("Order not found!");
+      return;
+    }
+    
+    let phone = order.customerPhone.replace(/\D/g, "");
+    if (phone.length === 10) {
+      phone = "91" + phone;
+    }
+    
+    const itemsText = order.items.map(item => `- ${item.name} (x${item.qty}) - ₹${item.price.toFixed(2)}`).join("\n");
+    const deliveryFee = (order.delivery === "delivery" && order.subtotal < 1000) ? 50 : 0;
+    const finalTotal = order.subtotal + deliveryFee - (order.loyaltyDiscount || 0);
+
+    const message = `📝 *SMART COLLECTION - ORDER BILL*
+----------------------------------------
+*Order ID:* SC-${order.orderId}
+*Date:* ${order.date}
+
+*Customer:* ${order.customerName}
+*Phone:* ${order.customerPhone}
+*Delivery:* ${order.delivery === 'pickup' ? 'Self Pickup at Shop' : 'Home Delivery'}
+${order.delivery !== 'pickup' ? `*Address:* ${order.address} ${order.pincode ? `(${order.pincode})` : ''}` : ''}
+
+*Items:*
+${itemsText}
+
+*Subtotal:* ₹${order.subtotal.toFixed(2)}
+*Delivery Fee:* ₹${deliveryFee.toFixed(2)}
+*Loyalty Discount:* -₹${(order.loyaltyDiscount || 0).toFixed(2)}
+----------------------------------------
+*Total Payable:* ₹${finalTotal.toFixed(2)}
+*Payment Method:* ${order.transactionId === 'COD' ? 'Cash on Delivery (COD)' : `Paid Online (UTR: ${order.transactionId})`}
+
+Thank you for shopping with *Smart Collection*!
+_For support, contact us at 7575757575._`;
+
+    const encodedMsg = encodeURIComponent(message);
+    const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMsg}`;
+    window.open(url, '_blank');
+  } catch (err) {
+    alert("Error generating manual WhatsApp bill: " + err.message);
+  }
 }
 
 async function placeCODOrder() {
@@ -3548,6 +3592,7 @@ function renderAdminOrders() {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span>${order.orderId}</span>
               <button class="btn btn-secondary btn-small" style="padding: 2px 6px; font-size: 0.75rem; border-color: transparent;" title="Download PDF Invoice" onclick="downloadInvoice('${order.orderId}')"><i class="fa-solid fa-file-pdf"></i></button>
+              <button class="btn btn-secondary btn-small" style="padding: 2px 6px; font-size: 0.75rem; border-color: transparent; color: #25d366; background: rgba(37, 211, 102, 0.1);" title="Send WhatsApp Bill" onclick="manualWhatsAppBill('${order._id}')"><i class="fa-brands fa-whatsapp"></i></button>
             </div>
           </td>
           <td>${order.customerName}</td>
@@ -3615,6 +3660,7 @@ function renderAdminOrders() {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span>${order.orderId}</span>
               <button class="btn btn-secondary btn-small" style="padding: 2px 6px; font-size: 0.75rem; border-color: transparent;" title="Download PDF Invoice" onclick="downloadInvoice('${order.orderId}')"><i class="fa-solid fa-file-pdf"></i></button>
+              <button class="btn btn-secondary btn-small" style="padding: 2px 6px; font-size: 0.75rem; border-color: transparent; color: #25d366; background: rgba(37, 211, 102, 0.1);" title="Send WhatsApp Bill" onclick="manualWhatsAppBill('${order._id}')"><i class="fa-brands fa-whatsapp"></i></button>
             </div>
           </td>
           <td>${order.customerName}</td>

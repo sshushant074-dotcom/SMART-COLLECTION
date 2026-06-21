@@ -1331,6 +1331,95 @@ app.get('/api/orders', async (req, res) => {
   }
 });
 
+// Automated WhatsApp Bill Dispatch Helper
+async function sendWhatsAppBill(order) {
+  const token = process.env.WHATSAPP_API_KEY || process.env.WHATSAPP_API_TOKEN;
+  const gatewayUrl = process.env.WHATSAPP_GATEWAY_URL;
+  
+  if (!gatewayUrl) {
+    console.log("ℹ️ [WhatsApp Automation] No WHATSAPP_GATEWAY_URL configured in .env. Skipping automated message.");
+    return;
+  }
+
+  // Format phone number to international format (e.g. 91XXXXXXXXXX for India)
+  let phone = order.customerPhone.replace(/\D/g, "");
+  if (phone.length === 10) {
+    phone = "91" + phone;
+  }
+
+  const itemsText = order.items.map(item => `- ${item.name} (x${item.qty}) - ₹${item.price.toFixed(2)}`).join("\n");
+  const deliveryFee = (order.delivery === "delivery" && order.subtotal < 1000) ? 50 : 0;
+  const finalTotal = order.subtotal + deliveryFee - (order.loyaltyDiscount || 0);
+
+  const message = `📝 *SMART COLLECTION - ORDER BILL*
+----------------------------------------
+*Order ID:* SC-${order.orderId}
+*Date:* ${order.date}
+
+*Customer:* ${order.customerName}
+*Phone:* ${order.customerPhone}
+*Delivery:* ${order.delivery === 'pickup' ? 'Self Pickup at Shop' : 'Home Delivery'}
+${order.delivery !== 'pickup' ? `*Address:* ${order.address} ${order.pincode ? `(${order.pincode})` : ''}` : ''}
+
+*Items:*
+${itemsText}
+
+*Subtotal:* ₹${order.subtotal.toFixed(2)}
+*Delivery Fee:* ₹${deliveryFee.toFixed(2)}
+*Loyalty Discount:* -₹${(order.loyaltyDiscount || 0).toFixed(2)}
+----------------------------------------
+*Total Payable:* ₹${finalTotal.toFixed(2)}
+*Payment Method:* ${order.transactionId === 'COD' ? 'Cash on Delivery (COD)' : `Paid Online (UTR: ${order.transactionId})`}
+
+Thank you for shopping with *Smart Collection*!
+_For support, contact us at 7575757575._`;
+
+  console.log(`[WhatsApp Automation] Attempting dispatch to ${phone}...`);
+
+  try {
+    let payload = {};
+    let headers = { "Content-Type": "application/json" };
+
+    if (gatewayUrl.includes("ultramsg.com")) {
+      payload = {
+        token: token,
+        to: phone,
+        body: message
+      };
+    } else if (gatewayUrl.includes("callmebot.com")) {
+      const encodedMsg = encodeURIComponent(message);
+      const url = `${gatewayUrl}?phone=${phone}&text=${encodedMsg}&apikey=${token}`;
+      const response = await fetch(url);
+      console.log(`[WhatsApp Gateway Response] Status: ${response.status}`);
+      return;
+    } else {
+      payload = {
+        number: phone,
+        to: phone,
+        message: message,
+        text: message,
+        apikey: token,
+        token: token
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+    }
+
+    const response = await fetch(gatewayUrl, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(payload)
+    });
+
+    console.log(`[WhatsApp Automation Gateway] Status: ${response.status} - ${response.statusText}`);
+    const text = await response.text();
+    console.log(`[WhatsApp Automation Response]:`, text.substring(0, 200));
+  } catch (err) {
+    console.error("❌ Failed to send automated WhatsApp bill:", err.message);
+  }
+}
+
 // Reusable helper function to process stock decrement, loyalty updates, and save order
 async function processAndSaveOrder(orderData, status = "Order Received", operator = "System") {
   let cleanPhone = orderData.customerPhone.replace(/\D/g, "");
@@ -1420,14 +1509,7 @@ async function processAndSaveOrder(orderData, status = "Order Received", operato
     console.log(`[LOYALTY UPDATE] Customer ${customer.name}: Redeemed ${pointsRedeemed} pts (-₹${loyaltyDiscount}), Earned ${pointsEarned} pts. New Balance: ${customer.loyaltyPoints}`);
   }
 
-  // Server-side validation for COD threshold
-  if (orderData.transactionId === "COD") {
-    const deliveryFee = (orderData.delivery === "delivery" && orderData.subtotal < 1000) ? 50 : 0;
-    const finalAmount = orderData.subtotal + deliveryFee - loyaltyDiscount;
-    if (finalAmount <= 1499) {
-      throw new Error("Cash on Delivery (COD) is only available for orders above ₹1499.");
-    }
-  }
+  // Server-side validation for COD threshold removed to allow COD for all amounts
 
   // Save order model
   const items = orderData.items.map(item => ({
@@ -1458,6 +1540,12 @@ async function processAndSaveOrder(orderData, status = "Order Received", operato
 
   await newOrder.save();
   await logAudit("ORDER_CREATE", `Placed new order SC-${newOrder.orderId} containing ${newOrder.items.length} items. Total: ₹${newOrder.subtotal}. Status: ${status}.`, operator);
+  
+  // Asynchronously send automated WhatsApp bill
+  sendWhatsAppBill(newOrder).catch(err => {
+    console.error("❌ Error in sendWhatsAppBill async execution:", err.message);
+  });
+
   return newOrder;
 }
 
