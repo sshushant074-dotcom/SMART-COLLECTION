@@ -1992,6 +1992,29 @@ body.dark-theme .slider-dot {
   padding: 0 30px 60px 30px;
 }
 
+.admin-analytics-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 30px;
+  align-items: start;
+}
+
+.admin-analytics-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  width: 100%;
+}
+
+.admin-flash-sales-layout,
+.admin-banners-layout,
+.admin-bundles-layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 30px;
+  align-items: start;
+}
+
 .reviews-list-container {
   display: flex;
   flex-direction: column;
@@ -2571,6 +2594,9 @@ body:has(#cartDrawer.active) {
   .admin-layout {
     grid-template-columns: 1fr;
   }
+  .admin-analytics-grid {
+    grid-template-columns: 1fr;
+  }
   .admin-flash-sales-layout {
     grid-template-columns: 1fr;
   }
@@ -2664,12 +2690,15 @@ body:has(#cartDrawer.active) {
   .admin-stats {
     grid-template-columns: 1fr;
   }
+  .admin-analytics-stats-grid {
+    grid-template-columns: 1fr;
+  }
   .cart-drawer {
     width: 100%;
     right: -100%;
   }
   .form-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
   .order-item-row {
     grid-template-columns: 50px 1fr;
