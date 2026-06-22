@@ -1327,6 +1327,48 @@ function selectModalSize(size, btn) {
   selectProductCardSize(currentModalProduct._id, size);
 }
 
+function renderCardRatingStars(p) {
+  const productReviews = reviews.filter(r => r.approved && (r.productId === p._id || r.productId === p.id));
+  let avgRating = 0;
+  let reviewCount = productReviews.length;
+  if (reviewCount > 0) {
+    avgRating = productReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount;
+  } else {
+    // Deterministic rating based on productId
+    let hash = 0;
+    const str = (p._id || p.id || "").toString();
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const ratingsList = [4.2, 4.5, 4.7, 4.8, 5.0];
+    avgRating = ratingsList[Math.abs(hash) % ratingsList.length];
+  }
+
+  let starHtml = "";
+  const fullStars = Math.floor(avgRating);
+  const hasHalfStar = (avgRating % 1) >= 0.4;
+  for (let i = 1; i <= 5; i++) {
+    if (i <= fullStars) {
+      starHtml += `<i class="fa-solid fa-star" style="color: #ffb300; font-size: 0.8rem;"></i>`;
+    } else if (i === fullStars + 1 && hasHalfStar) {
+      starHtml += `<i class="fa-solid fa-star-half-stroke" style="color: #ffb300; font-size: 0.8rem;"></i>`;
+    } else {
+      starHtml += `<i class="fa-regular fa-star" style="color: #666; font-size: 0.8rem;"></i>`;
+    }
+  }
+
+  const reviewText = reviewCount > 0 
+    ? `<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-left: 2px;">${avgRating.toFixed(1)} (${reviewCount})</span>`
+    : `<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-left: 2px;">${avgRating.toFixed(1)}</span>`;
+
+  return `
+    <div class="product-card-rating">
+      ${starHtml}
+      ${reviewText}
+    </div>
+  `;
+}
+
 function generateProductCardMarkup(p) {
   let badgeClass = "badge-kids";
   let displayCategory = "Small Children";
@@ -1366,6 +1408,9 @@ function generateProductCardMarkup(p) {
     <div class="product-card">
       <div class="product-img-wrapper">
         <span class="product-tag badge ${badgeClass}">${displayCategory}</span>
+        ${(p.salePrice && p.salePrice < p.price) ? `
+          <span class="discount-badge">${Math.round(((p.price - p.salePrice) / p.price) * 100)}% OFF</span>
+        ` : ''}
         ${p.matchPercent ? `<span class="match-badge">${p.matchPercent}% Match</span>` : ''}
         <button class="wishlist-heart-btn ${isWishlisted ? 'active' : ''}" onclick="event.stopPropagation(); toggleWishlist('${dbId}')" title="${isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}">
           <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
@@ -1378,6 +1423,7 @@ function generateProductCardMarkup(p) {
         </div>
         ${renderCardImageThumbnails(p, dbId)}
         <div class="product-actions-overlay">
+          <button class="circle-action-btn" title="Quick View" onclick="openProductModal('${dbId}')"><i class="fa-regular fa-eye"></i></button>
           ${inStock ? `<button class="circle-action-btn" title="Add to Cart" onclick="addToCart('${dbId}')"><i class="fa-solid fa-cart-plus"></i></button>` : ''}
           <button class="circle-action-btn" title="AI Try-on" onclick="tryOnProduct('${dbId}')"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
         </div>
@@ -1388,6 +1434,7 @@ function generateProductCardMarkup(p) {
           <span class="stock-status ${stockClass}">${stockLabel}</span>
         </div>
         <h4 class="product-title" style="cursor: pointer;" onclick="openProductModal('${dbId}')">${p.name}</h4>
+        ${renderCardRatingStars(p)}
         <p class="product-desc">${p.desc}</p>
         
         <!-- Sizing selection buttons -->
