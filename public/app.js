@@ -304,19 +304,18 @@ function closePwaInstructions() {
 // ==========================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Bind PWA install button click event
+  // Bind Install button to download Mod APK file
   const installBtn = document.getElementById('pwaInstallBtn');
   if (installBtn) {
-    installBtn.addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`👷 [PWA] Install prompt outcome: ${outcome}`);
-        deferredPrompt = null;
-        installBtn.style.display = 'none';
-      } else {
-        showPwaInstallationInstructions();
-      }
+    installBtn.addEventListener('click', () => {
+      console.log('🤖 [App Download] Initiating direct APK download...');
+      const downloadUrl = '/downloads/smart-collection-mod.apk';
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = 'Smart_Collection.apk';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     });
   }
 
