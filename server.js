@@ -88,6 +88,8 @@ const OrderSchema = new mongoose.Schema({
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
     name: String,
     price: Number,
+    originalPrice: Number,
+    discountAmount: Number,
     image: String,
     qty: Number
   }],
@@ -1477,6 +1479,8 @@ async function processAndSaveOrder(orderData, status = "Order Received", operato
       ? dbProduct.salePrice 
       : dbProduct.price;
     item.price = resolvedPrice;
+    item.originalPrice = dbProduct.price;
+    item.discountAmount = Math.max(0, dbProduct.price - resolvedPrice);
     calculatedSubtotal += resolvedPrice * item.qty;
   }
   orderData.subtotal = calculatedSubtotal;
@@ -1587,6 +1591,8 @@ async function processAndSaveOrder(orderData, status = "Order Received", operato
     productId: item.productId || item.id,
     name: item.name,
     price: item.price,
+    originalPrice: item.originalPrice || item.price,
+    discountAmount: item.discountAmount || 0,
     image: item.image,
     qty: item.qty
   }));

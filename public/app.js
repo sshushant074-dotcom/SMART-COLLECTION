@@ -4939,17 +4939,34 @@ function downloadInvoice(orderId) {
   element.style.backgroundColor = "#ffffff";
 
   // Build the invoice layout
-  let itemsHtml = order.items.map((item, idx) => `
+  let itemsHtml = order.items.map((item, idx) => {
+    const origVal = item.originalPrice || item.price;
+    const sellVal = item.price;
+    const itemDisc = Math.max(0, origVal - sellVal);
+    const totalDisc = itemDisc * item.qty;
+    
+    const priceDisplayHtml = itemDisc > 0
+      ? `<span style="text-decoration: line-through; color: #94a3b8; font-size: 0.8rem;">₹${origVal.toFixed(2)}</span><br>
+         <span style="font-weight: 600; color: #0070f3;">₹${sellVal.toFixed(2)}</span>`
+      : `₹${sellVal.toFixed(2)}`;
+
+    const totalDisplayHtml = itemDisc > 0
+      ? `<span style="font-weight: 600;">₹${(sellVal * item.qty).toFixed(2)}</span><br>
+         <span style="color: #ef4444; font-size: 0.75rem; font-weight: 600;">Saved: ₹${totalDisc.toFixed(2)}</span>`
+      : `₹${(sellVal * item.qty).toFixed(2)}`;
+
+    return `
     <tr style="border-bottom: 1px solid #eeeeee;">
       <td style="padding: 10px 0; font-size: 0.95rem;">${idx + 1}</td>
       <td style="padding: 10px 0; font-size: 0.95rem;">
         <strong>${item.name}</strong>
       </td>
       <td style="padding: 10px 0; text-align: center; font-size: 0.95rem;">${item.qty}</td>
-      <td style="padding: 10px 0; text-align: right; font-size: 0.95rem;">₹${item.price}</td>
-      <td style="padding: 10px 0; text-align: right; font-size: 0.95rem; font-weight: 600;">₹${item.price * item.qty}</td>
+      <td style="padding: 10px 0; text-align: right; font-size: 0.95rem; line-height: 1.3;">${priceDisplayHtml}</td>
+      <td style="padding: 10px 0; text-align: right; font-size: 0.95rem; font-weight: 600; line-height: 1.3;">${totalDisplayHtml}</td>
     </tr>
-  `).join("");
+    `;
+  }).join("");
 
   element.innerHTML = `
     <!-- Header -->
@@ -8092,6 +8109,8 @@ function addOfflineSaleItem() {
       size: size,
       qty: qty,
       price: resolvedPrice,
+      originalPrice: p.price,
+      discountAmount: Math.max(0, p.price - resolvedPrice),
       image: p.image,
       total: qty * resolvedPrice
     });
@@ -8125,7 +8144,23 @@ function renderOfflineSaleCart() {
       </tr>
     `;
   } else {
-    tbody.innerHTML = offlineSaleCart.map((item, idx) => `
+    tbody.innerHTML = offlineSaleCart.map((item, idx) => {
+      const isDiscounted = item.discountAmount > 0;
+      const priceHtml = isDiscounted 
+        ? `<div style="text-align: right; line-height: 1.3;">
+             <span style="text-decoration: line-through; color: var(--text-muted); font-size: 0.75rem;">₹${item.originalPrice}</span><br>
+             <span style="color: var(--primary); font-weight: 600;">₹${item.price}</span>
+           </div>`
+        : `₹${item.price}`;
+        
+      const totalHtml = isDiscounted
+        ? `<div style="text-align: right; line-height: 1.3;">
+             <span style="font-weight: 600;">₹${item.total}</span><br>
+             <span style="color: #e71d36; font-size: 0.72rem; font-weight: 600;">Saved: ₹${item.discountAmount * item.qty}</span>
+           </div>`
+        : `₹${item.total}`;
+
+      return `
       <tr>
         <td>
           <div style="display: flex; align-items: center; gap: 8px;">
@@ -8135,13 +8170,14 @@ function renderOfflineSaleCart() {
         </td>
         <td style="text-align: center;">${item.size}</td>
         <td style="text-align: center;">${item.qty}</td>
-        <td style="text-align: right;">₹${item.price}</td>
-        <td style="text-align: right; font-weight: 600;">₹${item.total}</td>
+        <td style="text-align: right;">${priceHtml}</td>
+        <td style="text-align: right;">${totalHtml}</td>
         <td style="text-align: center;">
           <button type="button" class="btn btn-secondary" onclick="removeOfflineSaleItem(${idx})" style="padding: 4px 8px; font-size: 0.75rem; background-color: rgba(231, 29, 54, 0.1); color: #e71d36; border: 1px solid rgba(231, 29, 54, 0.2); cursor: pointer;"><i class="fa-solid fa-trash"></i></button>
         </td>
       </tr>
-    `).join("");
+      `;
+    }).join("");
   }
   
   updateOfflineBillingSummary();
@@ -8361,15 +8397,49 @@ function showOfflineReceipt(order) {
   if (!container) return;
   
   const itemsListText = order.items.map(item => {
-    const nameStr = item.name.substring(0, 22);
-    const line1 = `${nameStr}`;
-    const qtyPriceStr = `${item.qty} x ₹${item.price.toFixed(2)}`;
-    const totalStr = `₹${(item.qty * item.price).toFixed(2)}`;
-    // align columns
-    const spacesCount = 29 - qtyPriceStr.length - totalStr.length;
-    const spaces = ' '.repeat(spacesCount > 0 ? spacesCount : 1);
-    return `${line1}\n${qtyPriceStr}${spaces}${totalStr}`;
-  }).join("\n");
+    const nameStr = item.name.substring(0, 29);
+    let itemDetail = `${nameStr}\n  Qty: ${item.qty}`;
+    
+    const origVal = item.originalPrice || item.price;
+    const sellVal = item.price;
+    const itemDisc = Math.max(0, origVal - sellVal);
+    const totalDisc = itemDisc * item.qty;
+    const totalVal = sellVal * item.qty;
+
+    if (itemDisc > 0) {
+      const origStr = `₹${origVal.toFixed(2)}`;
+      const sellStr = `₹${sellVal.toFixed(2)}`;
+      const discStr = `₹${totalDisc.toFixed(2)}`;
+      const totalStr = `₹${totalVal.toFixed(2)}`;
+
+      const origLabel = "  Orig Price:";
+      const sellLabel = "  Sell Price:";
+      const discLabel = "  Disc. Saved:";
+      const totalLabel = "  Subtotal:";
+
+      const origSpaces = ' '.repeat(Math.max(1, 29 - origLabel.length - origStr.length));
+      const sellSpaces = ' '.repeat(Math.max(1, 29 - sellLabel.length - sellStr.length));
+      const discSpaces = ' '.repeat(Math.max(1, 29 - discLabel.length - discStr.length));
+      const totalSpaces = ' '.repeat(Math.max(1, 29 - totalLabel.length - totalStr.length));
+
+      itemDetail += `\n${origLabel}${origSpaces}${origStr}`;
+      itemDetail += `\n${sellLabel}${sellSpaces}${sellStr}`;
+      itemDetail += `\n${discLabel}${discSpaces}${discStr}`;
+      itemDetail += `\n${totalLabel}${totalSpaces}${totalStr}`;
+    } else {
+      const priceStr = `₹${sellVal.toFixed(2)}`;
+      const totalStr = `₹${totalVal.toFixed(2)}`;
+      const rateLabel = `  Rate:`;
+      const totalLabel = `  Subtotal:`;
+      
+      const rateSpaces = ' '.repeat(Math.max(1, 29 - rateLabel.length - priceStr.length));
+      const totalSpaces = ' '.repeat(Math.max(1, 29 - totalLabel.length - totalStr.length));
+
+      itemDetail += `\n${rateLabel}${rateSpaces}${priceStr}`;
+      itemDetail += `\n${totalLabel}${totalSpaces}${totalStr}`;
+    }
+    return itemDetail;
+  }).join("\n-----------------------------\n");
   
   const subtotalStr = `₹${order.subtotal.toFixed(2)}`;
   const discountStr = `-₹${(order.loyaltyDiscount || 0).toFixed(2)}`;
