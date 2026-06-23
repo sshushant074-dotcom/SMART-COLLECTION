@@ -1582,11 +1582,20 @@ app.post('/api/offline-sales', async (req, res) => {
       if (cleanPhone.length === 10) {
         customer = await Customer.findOne({ phone: cleanPhone });
         if (!customer) {
+          // Generate a unique referralCode to satisfy unique database index constraints
+          let refCode = '';
+          while (true) {
+            refCode = 'SC-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            const existingRef = await Customer.findOne({ referralCode: refCode });
+            if (!existingRef) break;
+          }
+
           customer = new Customer({
             name: saleData.customerName || "Walk-in Customer",
             phone: cleanPhone,
             email: saleData.customerEmail ? saleData.customerEmail.trim() : undefined,
-            loyaltyPoints: 0
+            loyaltyPoints: 0,
+            referralCode: refCode
           });
           await customer.save();
           await logAudit("CUSTOMER_CREATE", `Created new customer profile for offline POS: ${customer.name} (${customer.phone})`, operator);
