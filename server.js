@@ -1359,8 +1359,8 @@ async function sendWhatsAppBill(order) {
 
 *Customer:* ${order.customerName}
 *Phone:* ${order.customerPhone}
-*Delivery:* ${order.delivery === 'pickup' ? 'Self Pickup at Shop' : 'Home Delivery'}
-${order.delivery !== 'pickup' ? `*Address:* ${order.address} ${order.pincode ? `(${order.pincode})` : ''}` : ''}
+*Delivery:* ${order.delivery === 'walk-in' ? 'Walk-in (Shop POS)' : order.delivery === 'pickup' ? 'Self Pickup at Shop' : 'Home Delivery'}
+${(order.delivery !== 'pickup' && order.delivery !== 'walk-in') ? `*Address:* ${order.address} ${order.pincode ? `(${order.pincode})` : ''}` : ''}
 
 *Items:*
 ${itemsText}
@@ -1370,7 +1370,7 @@ ${itemsText}
 *Loyalty Discount:* -₹${(order.loyaltyDiscount || 0).toFixed(2)}
 ----------------------------------------
 *Total Payable:* ₹${finalTotal.toFixed(2)}
-*Payment Method:* ${order.transactionId === 'COD' ? 'Cash on Delivery (COD)' : `Paid Online (UTR: ${order.transactionId})`}
+*Payment Method:* ${order.transactionId === 'COD' ? 'Cash on Delivery (COD)' : order.transactionId === 'CASH' ? 'Cash' : order.transactionId === 'UPI' ? 'UPI' : order.transactionId === 'CARD' ? 'Card' : `Paid Online (UTR: ${order.transactionId})`}
 
 Thank you for shopping with *Smart Collection*!
 _For support, contact us at 7575757575._`;
@@ -1556,6 +1556,60 @@ app.post('/api/orders', async (req, res) => {
     const orderData = req.body;
     const operator = req.headers['x-operator'] || "System";
     const newOrder = await processAndSaveOrder(orderData, "Order Received", operator);
+    res.status(201).json(newOrder);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 2a. POST submit offline walk-in POS sale
+app.post('/api/offline-sales', async (req, res) => {
+  try {
+    const saleData = req.body;
+    
+    if (!saleData.items || !saleData.items.length) {
+      return res.status(400).json({ error: "No items added to billing" });
+    }
+
+    const operator = req.headers['x-operator'] || "Admin POS";
+    const offlineOrderId = `OFFLINE-${Date.now().toString().slice(-6)}`;
+    
+    // Auto-create customer profile if it doesn't exist to accumulate loyalty points
+    let customer = null;
+    if (saleData.customerPhone && saleData.customerPhone !== "0000000000") {
+      let cleanPhone = saleData.customerPhone.replace(/\D/g, "");
+      if (cleanPhone.length === 12 && cleanPhone.startsWith("91")) cleanPhone = cleanPhone.slice(2);
+      if (cleanPhone.length === 10) {
+        customer = await Customer.findOne({ phone: cleanPhone });
+        if (!customer) {
+          customer = new Customer({
+            name: saleData.customerName || "Walk-in Customer",
+            phone: cleanPhone,
+            email: saleData.customerEmail || "",
+            loyaltyPoints: 0
+          });
+          await customer.save();
+          await logAudit("CUSTOMER_CREATE", `Created new customer profile for offline POS: ${customer.name} (${customer.phone})`, operator);
+        }
+      }
+    }
+
+    const orderData = {
+      orderId: offlineOrderId,
+      date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+      items: saleData.items,
+      delivery: "walk-in",
+      address: "Offline Shop POS",
+      customerName: saleData.customerName || "Walk-in Customer",
+      customerPhone: saleData.customerPhone || "0000000000",
+      customerEmail: saleData.customerEmail || "",
+      pointsRedeemed: saleData.pointsRedeemed || 0,
+      transactionId: saleData.transactionId || "CASH",
+      paymentScreenshot: ""
+    };
+
+    // Save as standard order but immediately Delivered (Completed POS)
+    const newOrder = await processAndSaveOrder(orderData, "Delivered", operator);
     res.status(201).json(newOrder);
   } catch (err) {
     res.status(400).json({ error: err.message });

@@ -640,6 +640,7 @@ function showAdminSubTab(subTabName) {
     { name: 'bundles', selector: '.admin-bundles-panel' },
     { name: 'flash-sales', selector: '.admin-flash-sales-panel' },
     { name: 'orders', selector: '.admin-orders-panel' },
+    { name: 'offline-sales', selector: '.admin-offline-sales-panel' },
     { name: 'customers', selector: '.admin-customers-panel' },
     { name: 'exchanges-reviews', selector: '.admin-dashboard-grids' },
     { name: 'audit-logs', selector: '.admin-audit-logs-panel' }
@@ -686,6 +687,8 @@ function showAdminSubTab(subTabName) {
     renderAdminBundles();
     populateAdminBundleProductSelects();
     populateAdminBundleSettings();
+  } else if (subTabName === 'offline-sales') {
+    initOfflineSalesTab();
   }
 }
 
@@ -7913,4 +7916,513 @@ window.filterShopByEvent = filterShopByEvent;
 window.updateProductEvent = updateProductEvent;
 window.updateExchangeSuggestions = updateExchangeSuggestions;
 window.selectExchangeSuggestion = selectExchangeSuggestion;
+
+// ==========================================================================
+// POS Offline Sales & Billing Logic
+// ==========================================================================
+
+let offlineSaleCart = [];
+let offlineCustomerSelected = null;
+let activeReceiptOrder = null;
+
+function initOfflineSalesTab() {
+  offlineSaleCart = [];
+  offlineCustomerSelected = null;
+  
+  // Clear search and select fields
+  const productSearch = document.getElementById("offlineSaleProductSearch");
+  if (productSearch) productSearch.value = "";
+  
+  const productSelect = document.getElementById("offlineSaleProductSelect");
+  if (productSelect) {
+    productSelect.value = "";
+    populateOfflineProductDropdown("");
+  }
+  
+  const sizeSelect = document.getElementById("offlineSaleSizeSelect");
+  if (sizeSelect) sizeSelect.innerHTML = '<option value="">-- Size --</option>';
+  
+  const qtyInput = document.getElementById("offlineSaleQtyInput");
+  if (qtyInput) {
+    qtyInput.value = 1;
+    qtyInput.max = 0;
+  }
+  
+  const priceDisplay = document.getElementById("offlineSalePriceDisplay");
+  if (priceDisplay) priceDisplay.textContent = "₹0";
+  
+  const phoneInput = document.getElementById("offlineSaleCustomerPhone");
+  if (phoneInput) phoneInput.value = "";
+  
+  const nameInput = document.getElementById("offlineSaleCustomerName");
+  if (nameInput) nameInput.value = "";
+  
+  const statusEl = document.getElementById("offlineCustomerLoyaltyStatus");
+  if (statusEl) statusEl.textContent = "";
+  
+  const redeemContainer = document.getElementById("offlineSaleRedeemContainer");
+  if (redeemContainer) redeemContainer.style.display = "none";
+  
+  const redeemCheckbox = document.getElementById("offlineSaleRedeemCheckbox");
+  if (redeemCheckbox) redeemCheckbox.checked = false;
+  
+  const paymentMethod = document.getElementById("offlineSalePaymentMethod");
+  if (paymentMethod) paymentMethod.value = "CASH";
+  
+  const historySearch = document.getElementById("offlineHistorySearch");
+  if (historySearch) historySearch.value = "";
+
+  renderOfflineSaleCart();
+  renderOfflineHistoryTable();
+}
+
+function populateOfflineProductDropdown(filterQuery) {
+  const select = document.getElementById("offlineSaleProductSelect");
+  if (!select) return;
+  
+  const q = filterQuery.toLowerCase().trim();
+  const filtered = products.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q) || p._id.toString().includes(q));
+  
+  select.innerHTML = '<option value="">-- Select Product --</option>' + 
+    filtered.map(p => {
+      const resolvedPrice = (p.salePrice && p.salePrice < p.price) ? p.salePrice : p.price;
+      return `<option value="${p._id}">${p.name} (Stock: ${p.stock}) - ₹${resolvedPrice}</option>`;
+    }).join("");
+}
+
+function filterOfflineProductDropdown() {
+  const query = document.getElementById("offlineSaleProductSearch").value;
+  populateOfflineProductDropdown(query);
+}
+
+function handleOfflineProductSelect() {
+  const select = document.getElementById("offlineSaleProductSelect");
+  const sizeSelect = document.getElementById("offlineSaleSizeSelect");
+  const qtyInput = document.getElementById("offlineSaleQtyInput");
+  const priceDisplay = document.getElementById("offlineSalePriceDisplay");
+  
+  const productId = select.value;
+  if (!productId) {
+    sizeSelect.innerHTML = '<option value="">-- Size --</option>';
+    qtyInput.max = 0;
+    qtyInput.value = 1;
+    priceDisplay.textContent = "₹0";
+    return;
+  }
+  
+  const p = products.find(prod => prod._id === productId);
+  if (!p) return;
+  
+  const sizes = (p.sizes && p.sizes.length > 0) ? p.sizes : ['S', 'M', 'L', 'XL'];
+  sizeSelect.innerHTML = sizes.map(sz => `<option value="${sz}">${sz}</option>`).join("");
+  
+  qtyInput.max = p.stock;
+  qtyInput.value = p.stock > 0 ? 1 : 0;
+  
+  const resolvedPrice = (p.salePrice && p.salePrice < p.price) ? p.salePrice : p.price;
+  priceDisplay.textContent = `₹${resolvedPrice}`;
+}
+
+function addOfflineSaleItem() {
+  const select = document.getElementById("offlineSaleProductSelect");
+  const sizeSelect = document.getElementById("offlineSaleSizeSelect");
+  const qtyInput = document.getElementById("offlineSaleQtyInput");
+  
+  const productId = select.value;
+  const size = sizeSelect.value;
+  const qty = parseInt(qtyInput.value) || 0;
+  
+  if (!productId) {
+    alert("Please select a product.");
+    return;
+  }
+  if (!size) {
+    alert("Please select a size.");
+    return;
+  }
+  if (qty <= 0) {
+    alert("Quantity must be at least 1.");
+    return;
+  }
+  
+  const p = products.find(prod => prod._id === productId);
+  if (!p) return;
+  
+  // Calculate existing quantity in cart
+  const existingInCart = offlineSaleCart.reduce((sum, item) => {
+    if (item.productId === productId) return sum + item.qty;
+    return sum;
+  }, 0);
+  
+  if (qty + existingInCart > p.stock) {
+    alert(`Insufficient stock! Product '${p.name}' only has ${p.stock} available. Current quantity in cart: ${existingInCart}.`);
+    return;
+  }
+  
+  const resolvedPrice = (p.salePrice && p.salePrice < p.price) ? p.salePrice : p.price;
+  
+  // Check if item of same product + size is already in cart
+  const cartItem = offlineSaleCart.find(item => item.productId === productId && item.size === size);
+  if (cartItem) {
+    cartItem.qty += qty;
+    cartItem.total = cartItem.qty * cartItem.price;
+  } else {
+    offlineSaleCart.push({
+      productId: p._id,
+      name: p.name,
+      size: size,
+      qty: qty,
+      price: resolvedPrice,
+      image: p.image,
+      total: qty * resolvedPrice
+    });
+  }
+  
+  // Reset item inputs
+  select.value = "";
+  sizeSelect.innerHTML = '<option value="">-- Size --</option>';
+  qtyInput.value = 1;
+  qtyInput.max = 0;
+  document.getElementById("offlineSalePriceDisplay").textContent = "₹0";
+  document.getElementById("offlineSaleProductSearch").value = "";
+  populateOfflineProductDropdown("");
+  
+  renderOfflineSaleCart();
+}
+
+function removeOfflineSaleItem(index) {
+  offlineSaleCart.splice(index, 1);
+  renderOfflineSaleCart();
+}
+
+function renderOfflineSaleCart() {
+  const tbody = document.getElementById("offlineSaleCartBody");
+  if (!tbody) return;
+  
+  if (offlineSaleCart.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">No items added to the bill yet.</td>
+      </tr>
+    `;
+  } else {
+    tbody.innerHTML = offlineSaleCart.map((item, idx) => `
+      <tr>
+        <td>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <img src="${item.image}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 4px;" onerror="this.src='https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?auto=format&fit=crop&q=80&w=100'">
+            <div style="font-weight: 600;">${item.name}</div>
+          </div>
+        </td>
+        <td style="text-align: center;">${item.size}</td>
+        <td style="text-align: center;">${item.qty}</td>
+        <td style="text-align: right;">₹${item.price}</td>
+        <td style="text-align: right; font-weight: 600;">₹${item.total}</td>
+        <td style="text-align: center;">
+          <button type="button" class="btn btn-secondary" onclick="removeOfflineSaleItem(${idx})" style="padding: 4px 8px; font-size: 0.75rem; background-color: rgba(231, 29, 54, 0.1); color: #e71d36; border: 1px solid rgba(231, 29, 54, 0.2); cursor: pointer;"><i class="fa-solid fa-trash"></i></button>
+        </td>
+      </tr>
+    `).join("");
+  }
+  
+  updateOfflineBillingSummary();
+}
+
+function updateOfflineBillingSummary() {
+  const subtotal = offlineSaleCart.reduce((sum, item) => sum + item.total, 0);
+  
+  let discount = 0;
+  const redeemCheckbox = document.getElementById("offlineSaleRedeemCheckbox");
+  if (redeemCheckbox && redeemCheckbox.checked && offlineCustomerSelected) {
+    // 1 point = ₹0.50
+    discount = Math.min(subtotal, offlineCustomerSelected.loyaltyPoints * 0.5);
+  }
+  
+  const finalTotal = Math.max(0, subtotal - discount);
+  
+  document.getElementById("offlineSubtotalDisplay").textContent = `₹${subtotal}`;
+  document.getElementById("offlineTotalDisplay").textContent = `₹${finalTotal}`;
+  
+  const discountRow = document.getElementById("offlineDiscountRow");
+  const discountDisplay = document.getElementById("offlineDiscountDisplay");
+  if (discount > 0) {
+    discountRow.style.display = "block";
+    discountDisplay.textContent = `₹${discount}`;
+  } else {
+    discountRow.style.display = "none";
+  }
+}
+
+async function lookupOfflineCustomer() {
+  const phoneInput = document.getElementById("offlineSaleCustomerPhone");
+  const nameInput = document.getElementById("offlineSaleCustomerName");
+  const statusEl = document.getElementById("offlineCustomerLoyaltyStatus");
+  const redeemContainer = document.getElementById("offlineSaleRedeemContainer");
+  const redeemCheckbox = document.getElementById("offlineSaleRedeemCheckbox");
+  
+  let phone = phoneInput.value.replace(/\D/g, "");
+  if (phone.length === 12 && phone.startsWith("91")) phone = phone.slice(2);
+  if (!phone || phone.length < 10) {
+    alert("Please enter a valid 10-digit customer phone number.");
+    return;
+  }
+  
+  statusEl.textContent = "Looking up...";
+  redeemContainer.style.display = "none";
+  redeemCheckbox.checked = false;
+  offlineCustomerSelected = null;
+  
+  try {
+    const customer = await fetchFromApi(`/api/customers/${phone}`);
+    if (customer) {
+      offlineCustomerSelected = customer;
+      nameInput.value = customer.name || "";
+      statusEl.textContent = `Found customer! Loyalty Points: ${customer.loyaltyPoints} (Value: ₹${(customer.loyaltyPoints * 0.5).toFixed(2)})`;
+      statusEl.style.color = "#2ec4b6";
+      
+      if (customer.loyaltyPoints >= 200) {
+        redeemContainer.style.display = "block";
+        document.getElementById("offlineSaleRedeemMaxLabel").textContent = `Redeem Points (Max ${customer.loyaltyPoints} pts - ₹${(customer.loyaltyPoints * 0.5).toFixed(2)})`;
+      }
+    }
+  } catch (err) {
+    statusEl.textContent = "Customer profile not found. A new loyalty profile will be created on checkout.";
+    statusEl.style.color = "var(--text-muted)";
+  }
+}
+
+async function submitOfflineSale() {
+  if (offlineSaleCart.length === 0) {
+    alert("Please add at least one item to the bill.");
+    return;
+  }
+  
+  const customerName = document.getElementById("offlineSaleCustomerName").value.trim() || "Walk-in Customer";
+  const customerPhoneInput = document.getElementById("offlineSaleCustomerPhone").value.trim();
+  let customerPhone = customerPhoneInput ? customerPhoneInput.replace(/\D/g, "") : "0000000000";
+  if (customerPhone.length === 12 && customerPhone.startsWith("91")) customerPhone = customerPhone.slice(2);
+  
+  const paymentMethod = document.getElementById("offlineSalePaymentMethod").value;
+  const redeemCheckbox = document.getElementById("offlineSaleRedeemCheckbox");
+  let pointsRedeemed = 0;
+  if (redeemCheckbox && redeemCheckbox.checked && offlineCustomerSelected) {
+    const subtotal = offlineSaleCart.reduce((sum, item) => sum + item.total, 0);
+    pointsRedeemed = Math.min(offlineCustomerSelected.loyaltyPoints, Math.floor(subtotal / 0.5));
+  }
+  
+  const items = offlineSaleCart.map(item => ({
+    productId: item.productId,
+    name: `${item.name} (Size: ${item.size})`,
+    price: item.price,
+    image: item.image,
+    qty: item.qty
+  }));
+  
+  const postData = {
+    customerName,
+    customerPhone: customerPhoneInput ? customerPhone : "0000000000",
+    items,
+    pointsRedeemed,
+    transactionId: paymentMethod
+  };
+  
+  const operator = sessionStorage.getItem("smart_collection_admin_logged_operator") || "Admin POS";
+  
+  try {
+    const response = await fetchFromApi('/api/offline-sales', {
+      method: 'POST',
+      headers: {
+        'x-operator': operator
+      },
+      body: JSON.stringify(postData)
+    });
+    
+    if (response) {
+      alert("POS Sale recorded successfully!");
+      
+      // Update global store state arrays dynamically
+      orders = await fetchFromApi('/api/orders');
+      products = await fetchFromApi('/api/products');
+      
+      // Re-initialize other tabs
+      renderAdminAnalytics();
+      renderAdminInventory();
+      
+      // Pop open receipt modal
+      showOfflineReceipt(response);
+      
+      // Reset forms and POS cart
+      initOfflineSalesTab();
+    }
+  } catch (err) {
+    alert(`Failed to complete POS sale: ${err.message}`);
+  }
+}
+
+function filterOfflineHistoryTable() {
+  renderOfflineHistoryTable();
+}
+
+function renderOfflineHistoryTable() {
+  const tbody = document.getElementById("offlineSalesHistoryBody");
+  if (!tbody) return;
+  
+  const searchInput = document.getElementById("offlineHistorySearch");
+  const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+  
+  const offlineOrders = orders.filter(o => o.delivery === "walk-in");
+  const filtered = offlineOrders.filter(o => {
+    return o.orderId.toLowerCase().includes(query) ||
+           o.customerName.toLowerCase().includes(query) ||
+           o.customerPhone.toLowerCase().includes(query) ||
+           o.items.some(item => item.name.toLowerCase().includes(query)) ||
+           o.transactionId.toLowerCase().includes(query);
+  });
+  
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">No offline sales found.</td>
+      </tr>
+    `;
+  } else {
+    tbody.innerHTML = filtered.map(o => {
+      const displayTotal = o.subtotal - (o.loyaltyDiscount || 0);
+      return `
+        <tr>
+          <td style="font-weight: 700; color: var(--primary);">${o.orderId}</td>
+          <td>${o.date}</td>
+          <td>
+            <div style="font-weight: 600;">${o.customerName}</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">${o.customerPhone}</div>
+          </td>
+          <td style="font-weight: 600;">₹${displayTotal.toFixed(2)}</td>
+          <td><span style="font-size:0.75rem; font-weight:700; padding:2px 6px; border-radius:4px; background:var(--bg-accent); border:1px solid var(--border);">${o.transactionId}</span></td>
+          <td style="text-align: center;">
+            <button type="button" class="btn btn-secondary btn-small" onclick="viewOfflineReceiptById('${o.orderId}')" style="padding: 4px 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer;"><i class="fa-solid fa-file-invoice"></i> View</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+}
+
+function viewOfflineReceiptById(orderId) {
+  const o = orders.find(ord => ord.orderId === orderId);
+  if (o) showOfflineReceipt(o);
+}
+
+function showOfflineReceipt(order) {
+  activeReceiptOrder = order;
+  const container = document.getElementById("offlineReceiptPrintableArea");
+  if (!container) return;
+  
+  const itemsListText = order.items.map(item => {
+    const nameStr = item.name.substring(0, 22);
+    const line1 = `${nameStr}`;
+    const qtyPriceStr = `${item.qty} x ₹${item.price.toFixed(2)}`;
+    const totalStr = `₹${(item.qty * item.price).toFixed(2)}`;
+    // align columns
+    const spacesCount = 29 - qtyPriceStr.length - totalStr.length;
+    const spaces = ' '.repeat(spacesCount > 0 ? spacesCount : 1);
+    return `${line1}\n${qtyPriceStr}${spaces}${totalStr}`;
+  }).join("\n");
+  
+  const subtotalStr = `₹${order.subtotal.toFixed(2)}`;
+  const discountStr = `-₹${(order.loyaltyDiscount || 0).toFixed(2)}`;
+  const grandTotal = order.subtotal - (order.loyaltyDiscount || 0);
+  const totalStr = `₹${grandTotal.toFixed(2)}`;
+  
+  const subtotalSpaces = ' '.repeat(29 - 9 - subtotalStr.length);
+  const discountSpaces = ' '.repeat(29 - 18 - discountStr.length);
+  const totalSpaces = ' '.repeat(29 - 6 - totalStr.length);
+  const paymentSpaces = ' '.repeat(29 - 10 - order.transactionId.length);
+  
+  container.innerHTML = `
+<pre style="margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 13px; line-height: 1.4; color: #000; background: #fff;">
+      * SMART COLLECTION *
+      Jalalpur, Ambedkar Nagar
+        Phone: 7575757575
+=============================
+INVOICE: SC-${order.orderId}
+DATE:    ${order.date}
+=============================
+CUSTOMER: ${order.customerName}
+PHONE:    ${order.customerPhone}
+DELIVERY: Walk-in (Shop POS)
+=============================
+ITEMS:
+${itemsListText}
+-----------------------------
+Subtotal:${subtotalSpaces}${subtotalStr}
+Loyalty Discount:${discountSpaces}${discountStr}
+-----------------------------
+TOTAL:${totalSpaces}${totalStr}
+PAID VIA:${paymentSpaces}${order.transactionId}
+=============================
+   Thank you for shopping!
+      Please visit again.
+</pre>
+  `;
+  
+  document.getElementById("offlineReceiptModalBackdrop").classList.add("active");
+}
+
+function closeOfflineReceiptModal() {
+  document.getElementById("offlineReceiptModalBackdrop").classList.remove("active");
+  activeReceiptOrder = null;
+}
+
+function printOfflineReceipt() {
+  if (!activeReceiptOrder) return;
+  const printContents = document.getElementById("offlineReceiptPrintableArea").innerHTML;
+  
+  const printWindow = window.open("", "_blank");
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Receipt SC-${activeReceiptOrder.orderId}</title>
+        <style>
+          body {
+            font-family: 'Courier New', Courier, monospace;
+            padding: 10px;
+            width: 72mm; /* Fits standard receipt printers */
+            margin: 0 auto;
+            color: #000;
+            background: #fff;
+          }
+          pre {
+            margin: 0;
+            white-space: pre-wrap;
+            font-size: 12px;
+            line-height: 1.4;
+          }
+          @page {
+            margin: 0;
+          }
+        </style>
+      </head>
+      <body onload="window.print(); window.close();">
+        ${printContents}
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
+window.initOfflineSalesTab = initOfflineSalesTab;
+window.filterOfflineProductDropdown = filterOfflineProductDropdown;
+window.handleOfflineProductSelect = handleOfflineProductSelect;
+window.addOfflineSaleItem = addOfflineSaleItem;
+window.removeOfflineSaleItem = removeOfflineSaleItem;
+window.updateOfflineBillingSummary = updateOfflineBillingSummary;
+window.lookupOfflineCustomer = lookupOfflineCustomer;
+window.submitOfflineSale = submitOfflineSale;
+window.filterOfflineHistoryTable = filterOfflineHistoryTable;
+window.renderOfflineHistoryTable = renderOfflineHistoryTable;
+window.viewOfflineReceiptById = viewOfflineReceiptById;
+window.showOfflineReceipt = showOfflineReceipt;
+window.closeOfflineReceiptModal = closeOfflineReceiptModal;
+window.printOfflineReceipt = printOfflineReceipt;
+
 

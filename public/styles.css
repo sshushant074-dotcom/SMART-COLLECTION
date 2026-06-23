@@ -2034,6 +2034,13 @@ body.dark-theme .slider-dot {
   width: 100%;
 }
 
+.admin-offline-sales-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 30px;
+  align-items: start;
+}
+
 .admin-flash-sales-layout,
 .admin-banners-layout,
 .admin-bundles-layout {
@@ -2623,6 +2630,9 @@ body:has(#cartDrawer.active) {
     grid-template-columns: 1fr;
   }
   .admin-analytics-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-offline-sales-layout {
     grid-template-columns: 1fr;
   }
   .admin-flash-sales-layout {

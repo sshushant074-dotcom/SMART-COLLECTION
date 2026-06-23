@@ -769,6 +769,7 @@
           <button class="btn btn-secondary btn-small" id="btn-admin-tab-bundles" onclick="showAdminSubTab('bundles')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-gift"></i> Bundles</button>
           <button class="btn btn-secondary btn-small" id="btn-admin-tab-flash-sales" onclick="showAdminSubTab('flash-sales')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-bolt"></i> Flash Sales</button>
           <button class="btn btn-secondary btn-small" id="btn-admin-tab-orders" onclick="showAdminSubTab('orders')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-receipt"></i> Orders Log</button>
+          <button class="btn btn-secondary btn-small" id="btn-admin-tab-offline-sales" onclick="showAdminSubTab('offline-sales')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-cash-register"></i> POS & Billing</button>
           <button class="btn btn-secondary btn-small" id="btn-admin-tab-customers" onclick="showAdminSubTab('customers')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-users"></i> Customer DB</button>
           <button class="btn btn-secondary btn-small" id="btn-admin-tab-exchanges-reviews" onclick="showAdminSubTab('exchanges-reviews')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-right-left"></i> Exchanges & Reviews</button>
           <button class="btn btn-secondary btn-small" id="btn-admin-tab-audit-logs" onclick="showAdminSubTab('audit-logs')" style="border-radius: 50px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-clock-rotate-left"></i> Audit Logs</button>
@@ -970,6 +971,136 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <!-- POS Offline Sales & Billing Panel -->
+      <div class="admin-offline-sales-panel" style="display: none; max-width: 1300px; margin: 30px auto 30px auto; padding: 0 30px;">
+        <div class="admin-offline-sales-layout">
+          
+          <!-- Left Column: POS Form & Billing Cart -->
+          <div class="admin-form-panel" style="margin: 0;">
+            <h3><i class="fa-solid fa-cash-register"></i> New Offline Bill (POS)</h3>
+            <form id="offlineSaleForm" onsubmit="event.preventDefault();">
+              <div class="form-row" style="grid-template-columns: 1.2fr 0.8fr; gap: 15px; margin-bottom: 15px;">
+                <div class="form-group">
+                  <label style="font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; display: block;">Search & Select Product *</label>
+                  <input type="text" id="offlineSaleProductSearch" placeholder="Type to filter..." oninput="filterOfflineProductDropdown()" style="width: 100%; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text); margin-bottom: 8px;">
+                  <select id="offlineSaleProductSelect" onchange="handleOfflineProductSelect()" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                    <option value="">-- Select Product --</option>
+                  </select>
+                </div>
+                <div class="form-row" style="grid-template-columns: 1fr 1fr; gap: 10px;">
+                  <div class="form-group">
+                    <label style="font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; display: block;">Size *</label>
+                    <select id="offlineSaleSizeSelect" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                      <option value="">-- Size --</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label style="font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; display: block;">Qty *</label>
+                    <input type="number" id="offlineSaleQtyInput" min="1" value="1" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <span style="font-size: 0.9rem; font-weight: 600;">Unit Price: <span id="offlineSalePriceDisplay" style="color: var(--primary); font-weight: 700;">₹0</span></span>
+                <button type="button" class="btn btn-secondary btn-small" onclick="addOfflineSaleItem()" style="padding: 10px 15px; border-radius: var(--radius-sm); font-weight: 700;"><i class="fa-solid fa-plus"></i> Add Item to Bill</button>
+              </div>
+
+              <!-- Billing Cart Table -->
+              <h4 style="font-size: 0.95rem; margin: 15px 0 10px 0; border-bottom: 1px dashed var(--border); padding-bottom: 6px;"><i class="fa-solid fa-cart-shopping"></i> Bill items</h4>
+              <div class="admin-table-container" style="max-height: 250px; overflow-y: auto; margin-bottom: 15px;">
+                <table class="admin-table" style="font-size: 0.85rem;">
+                  <thead>
+                    <tr>
+                      <th>Product Details</th>
+                      <th style="width: 80px; text-align: center;">Size</th>
+                      <th style="width: 60px; text-align: center;">Qty</th>
+                      <th style="width: 80px; text-align: right;">Price</th>
+                      <th style="width: 80px; text-align: right;">Total</th>
+                      <th style="width: 50px; text-align: center;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="offlineSaleCartBody">
+                    <tr>
+                      <td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">No items added to the bill yet.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Loyalty Points & Payment -->
+              <h4 style="font-size: 0.95rem; margin: 20px 0 10px 0; border-bottom: 1px dashed var(--border); padding-bottom: 6px;"><i class="fa-solid fa-user-tag"></i> Customer & Payment details</h4>
+              <div class="form-row" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div class="form-group">
+                  <label style="font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; display: block;">Customer Phone</label>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="text" id="offlineSaleCustomerPhone" placeholder="e.g. 9876543210" style="width: 100%; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                    <button type="button" class="btn btn-secondary" onclick="lookupOfflineCustomer()" style="padding: 8px 12px; display: flex; align-items: center; justify-content: center; height: 38px;"><i class="fa-solid fa-search"></i></button>
+                  </div>
+                  <small id="offlineCustomerLoyaltyStatus" style="display: block; margin-top: 4px; font-weight: 600; color: #2ec4b6; font-size: 0.72rem; min-height: 16px;"></small>
+                </div>
+                <div class="form-group">
+                  <label style="font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; display: block;">Customer Name</label>
+                  <input type="text" id="offlineSaleCustomerName" placeholder="Walk-in Customer" style="width: 100%; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text); height: 38px;">
+                </div>
+              </div>
+
+              <div id="offlineSaleRedeemContainer" class="form-group" style="display: none; margin-bottom: 15px; background: rgba(46, 196, 182, 0.05); border: 1px solid rgba(46, 196, 182, 0.2); padding: 10px; border-radius: var(--radius-sm);">
+                <label style="font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text);">
+                  <input type="checkbox" id="offlineSaleRedeemCheckbox" onchange="updateOfflineBillingSummary()" style="width: 16px; height: 16px; cursor: pointer;">
+                  <span id="offlineSaleRedeemMaxLabel">Redeem Points</span>
+                </label>
+              </div>
+
+              <div class="form-row" style="grid-template-columns: 1.2fr 0.8fr; gap: 15px; align-items: center;">
+                <div class="form-group">
+                  <label style="font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; display: block;">Payment Mode *</label>
+                  <select id="offlineSalePaymentMethod" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                    <option value="CASH">Cash Payment</option>
+                    <option value="UPI">UPI / QR Code</option>
+                    <option value="CARD">Debit/Credit Card</option>
+                  </select>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Subtotal: <span id="offlineSubtotalDisplay">₹0</span></div>
+                  <div style="font-size: 0.8rem; color: #e71d36; font-weight: 600; display: none;" id="offlineDiscountRow">Discount: -<span id="offlineDiscountDisplay">₹0</span></div>
+                  <div style="font-size: 1.2rem; font-weight: 800; margin-top: 4px; color: var(--text);">Total: <span id="offlineTotalDisplay" style="color: var(--primary);">₹0</span></div>
+                </div>
+              </div>
+
+              <button type="button" class="btn btn-primary btn-full" onclick="submitOfflineSale()" style="margin-top: 20px; padding: 14px; font-size: 0.95rem; font-weight: 800;"><i class="fa-solid fa-file-invoice"></i> Generate Invoice & Complete Sale</button>
+            </form>
+          </div>
+
+          <!-- Right Column: Offline Sales Log Directory -->
+          <div class="admin-list-panel" style="margin: 0; min-height: 520px; display: flex; flex-direction: column;">
+            <h3><i class="fa-solid fa-list-check"></i> Offline Shop Sales History</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+              <input type="text" id="offlineHistorySearch" placeholder="Search customer, ID, items..." oninput="filterOfflineHistoryTable()" style="flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+            </div>
+            <div class="admin-table-container" style="flex: 1; overflow-y: auto;">
+              <table class="admin-table" style="font-size: 0.82rem;">
+                <thead>
+                  <tr>
+                    <th>Invoice ID</th>
+                    <th>Date & Time</th>
+                    <th>Customer Details</th>
+                    <th>Subtotal</th>
+                    <th>Mode</th>
+                    <th style="width: 80px; text-align: center;">Receipt</th>
+                  </tr>
+                </thead>
+                <tbody id="offlineSalesHistoryBody">
+                  <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">No offline sales recorded yet.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -2319,6 +2450,26 @@
     <i class="fa-brands fa-whatsapp"></i>
     <span class="whatsapp-float-tooltip">Chat with Support</span>
   </a>
+
+  <!-- Monospace Thermal Receipt Modal -->
+  <div class="modal-backdrop" id="offlineReceiptModalBackdrop" style="z-index: 1050;">
+    <div class="modal-container" style="max-width: 400px; padding: 20px; border-radius: var(--radius-md); background-color: var(--bg-card); border: 1px solid var(--border); box-shadow: var(--shadow);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+        <h3 style="margin: 0; font-size: 1.1rem;"><i class="fa-solid fa-file-invoice"></i> Sales Receipt</h3>
+        <button class="close-modal-btn" onclick="closeOfflineReceiptModal()" style="background: none; border: none; font-size: 1.2rem; color: var(--text-muted); cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <!-- Receipt Printable Area -->
+      <div id="offlineReceiptPrintableArea" style="background-color: #fff; color: #000; padding: 25px 15px; border-radius: 4px; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); font-family: 'Courier New', Courier, monospace; text-align: left; max-height: 450px; overflow-y: auto;">
+        <!-- Dynamically Rendered Monospace Thermal Receipt -->
+      </div>
+      
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button type="button" class="btn btn-primary" onclick="printOfflineReceipt()" style="flex: 1; padding: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;"><i class="fa-solid fa-print"></i> Print Receipt</button>
+        <button type="button" class="btn btn-secondary" onclick="closeOfflineReceiptModal()" style="flex: 1; padding: 12px; font-weight: bold;">Close</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Google Sign-In SDK -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
