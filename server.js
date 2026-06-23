@@ -1585,7 +1585,7 @@ app.post('/api/offline-sales', async (req, res) => {
           customer = new Customer({
             name: saleData.customerName || "Walk-in Customer",
             phone: cleanPhone,
-            email: saleData.customerEmail || "",
+            email: saleData.customerEmail ? saleData.customerEmail.trim() : undefined,
             loyaltyPoints: 0
           });
           await customer.save();
