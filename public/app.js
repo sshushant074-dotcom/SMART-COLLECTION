@@ -7952,7 +7952,26 @@ function initOfflineSalesTab() {
   if (priceDisplay) priceDisplay.textContent = "₹0";
   
   const phoneInput = document.getElementById("offlineSaleCustomerPhone");
-  if (phoneInput) phoneInput.value = "";
+  if (phoneInput) {
+    phoneInput.value = "";
+    if (!phoneInput.dataset.listenerAttached) {
+      phoneInput.addEventListener("input", () => {
+        offlineCustomerSelected = null;
+        const statusEl = document.getElementById("offlineCustomerLoyaltyStatus");
+        if (statusEl) {
+          statusEl.textContent = "Customer phone changed. Please click Lookup to verify loyalty status.";
+          statusEl.style.color = "var(--text-muted)";
+        }
+        const redeemContainer = document.getElementById("offlineSaleRedeemContainer");
+        if (redeemContainer) redeemContainer.style.display = "none";
+        const redeemCheckbox = document.getElementById("offlineSaleRedeemCheckbox");
+        if (redeemCheckbox) redeemCheckbox.checked = false;
+        
+        updateOfflineBillingSummary();
+      });
+      phoneInput.dataset.listenerAttached = "true";
+    }
+  }
   
   const nameInput = document.getElementById("offlineSaleCustomerName");
   if (nameInput) nameInput.value = "";
@@ -8131,13 +8150,19 @@ function renderOfflineSaleCart() {
 function updateOfflineBillingSummary() {
   const subtotal = offlineSaleCart.reduce((sum, item) => sum + item.total, 0);
   
-  let discount = 0;
+  let pointsDiscount = 0;
   const redeemCheckbox = document.getElementById("offlineSaleRedeemCheckbox");
   if (redeemCheckbox && redeemCheckbox.checked && offlineCustomerSelected) {
     // 1 point = ₹0.50
-    discount = Math.min(subtotal, offlineCustomerSelected.loyaltyPoints * 0.5);
+    pointsDiscount = Math.min(subtotal, offlineCustomerSelected.loyaltyPoints * 0.5);
   }
   
+  let historyDiscount = 0;
+  if (offlineCustomerSelected && offlineCustomerSelected.qualifiesForOfflineDiscount) {
+    historyDiscount = Math.round(subtotal * 0.05); // 5% discount
+  }
+  
+  const discount = Math.min(subtotal, pointsDiscount + historyDiscount);
   const finalTotal = Math.max(0, subtotal - discount);
   
   document.getElementById("offlineSubtotalDisplay").textContent = `₹${subtotal}`;
@@ -8147,7 +8172,15 @@ function updateOfflineBillingSummary() {
   const discountDisplay = document.getElementById("offlineDiscountDisplay");
   if (discount > 0) {
     discountRow.style.display = "block";
-    discountDisplay.textContent = `₹${discount}`;
+    let discountText = `₹${discount}`;
+    if (pointsDiscount > 0 && historyDiscount > 0) {
+      discountText += ` (Points: ₹${pointsDiscount} + 5% Loyalty: ₹${historyDiscount})`;
+    } else if (pointsDiscount > 0) {
+      discountText += ` (Points: ₹${pointsDiscount})`;
+    } else if (historyDiscount > 0) {
+      discountText += ` (5% Loyalty: ₹${historyDiscount})`;
+    }
+    discountDisplay.textContent = discountText;
   } else {
     discountRow.style.display = "none";
   }
@@ -8177,13 +8210,23 @@ async function lookupOfflineCustomer() {
     if (customer) {
       offlineCustomerSelected = customer;
       nameInput.value = customer.name || "";
-      statusEl.textContent = `Found customer! Loyalty Points: ${customer.loyaltyPoints} (Value: ₹${(customer.loyaltyPoints * 0.5).toFixed(2)})`;
+      
+      const offlineSpend = customer.totalOfflineSpend || 0;
+      let statusText = `Found customer! Loyalty Points: ${customer.loyaltyPoints} (Value: ₹${(customer.loyaltyPoints * 0.5).toFixed(2)})`;
+      if (customer.qualifiesForOfflineDiscount) {
+        statusText += ` | 🎉 5% Loyalty Discount Active! (Offline Spend: ₹${offlineSpend.toFixed(2)})`;
+      } else {
+        statusText += ` (Offline Spend: ₹${offlineSpend.toFixed(2)}/₹5,000 for 5% discount)`;
+      }
+      statusEl.textContent = statusText;
       statusEl.style.color = "#2ec4b6";
       
       if (customer.loyaltyPoints >= 200) {
         redeemContainer.style.display = "block";
         document.getElementById("offlineSaleRedeemMaxLabel").textContent = `Redeem Points (Max ${customer.loyaltyPoints} pts - ₹${(customer.loyaltyPoints * 0.5).toFixed(2)})`;
       }
+      
+      updateOfflineBillingSummary();
     }
   } catch (err) {
     statusEl.textContent = "Customer profile not found. A new loyalty profile will be created on checkout.";

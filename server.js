@@ -1217,7 +1217,42 @@ app.get('/api/customers/:phone', async (req, res) => {
     const customer = await findCustomerByIdentifier(req.params.phone);
     if (!customer) return res.status(404).json({ error: 'Customer profile not found' });
     const populated = await customer.populate('wishlist');
-    res.json(populated);
+    
+    let cleanPhone = populated.phone ? populated.phone.replace(/\D/g, "") : "";
+    if (cleanPhone.length === 12 && cleanPhone.startsWith("91")) cleanPhone = cleanPhone.slice(2);
+    if (cleanPhone.length === 11 && cleanPhone.startsWith("0")) cleanPhone = cleanPhone.slice(1);
+    
+    let totalOfflineSpend = 0;
+    let totalOfflineItems = 0;
+    
+    if (cleanPhone) {
+      const offlineOrders = await Order.find({
+        delivery: "walk-in",
+        status: { $ne: "Cancelled" },
+        $or: [
+          { customerPhone: cleanPhone },
+          { customerPhone: `91${cleanPhone}` },
+          { customerPhone: `+91${cleanPhone}` },
+          { customerPhone: `0${cleanPhone}` }
+        ]
+      });
+      for (const order of offlineOrders) {
+        const netSpend = Math.max(0, order.subtotal - (order.loyaltyDiscount || 0));
+        totalOfflineSpend += netSpend;
+        if (order.items) {
+          for (const item of order.items) {
+            totalOfflineItems += item.qty || 0;
+          }
+        }
+      }
+    }
+    
+    const customerObj = populated.toObject();
+    customerObj.totalOfflineSpend = totalOfflineSpend;
+    customerObj.totalOfflineItems = totalOfflineItems;
+    customerObj.qualifiesForOfflineDiscount = (totalOfflineSpend > 5000 || totalOfflineItems > 5000);
+    
+    res.json(customerObj);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -1485,6 +1520,41 @@ async function processAndSaveOrder(orderData, status = "Order Received", operato
       // Deduct points from profile
       customer.loyaltyPoints -= pointsRedeemed;
     }
+
+    // Apply 5% loyalty discount if customer qualifies by having spent >5000 or bought >5000 items offline
+    if (orderData.delivery === "walk-in") {
+      let totalOfflineSpend = 0;
+      let totalOfflineItems = 0;
+      
+      const offlineOrders = await Order.find({
+        delivery: "walk-in",
+        status: { $ne: "Cancelled" },
+        $or: [
+          { customerPhone: cleanPhone },
+          { customerPhone: `91${cleanPhone}` },
+          { customerPhone: `+91${cleanPhone}` },
+          { customerPhone: `0${cleanPhone}` }
+        ]
+      });
+      
+      for (const order of offlineOrders) {
+        const netSpend = Math.max(0, order.subtotal - (order.loyaltyDiscount || 0));
+        totalOfflineSpend += netSpend;
+        if (order.items) {
+          for (const item of order.items) {
+            totalOfflineItems += item.qty || 0;
+          }
+        }
+      }
+      
+      if (totalOfflineSpend > 5000 || totalOfflineItems > 5000) {
+        const historyDiscount = Math.round(calculatedSubtotal * 0.05);
+        loyaltyDiscount += historyDiscount;
+        console.log(`[OFFLINE LOYALTY DISCOUNT] Customer ${customer.name} qualifies for 5% history discount: ₹${historyDiscount}`);
+      }
+    }
+
+    loyaltyDiscount = Math.min(calculatedSubtotal, loyaltyDiscount);
 
     // Check if this is their first completed order to credit referral points to referrer
     const query = { $or: [{ customerPhone: cleanPhone }] };
