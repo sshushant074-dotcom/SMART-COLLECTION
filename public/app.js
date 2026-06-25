@@ -1526,6 +1526,21 @@ function updatePriceSliderLabel() {
   applyFilters();
 }
 
+function toggleFilterGroup(groupId) {
+  const content = document.getElementById(`filter-content-${groupId}`);
+  const title = document.getElementById(`filter-title-${groupId}`);
+  if (content && title) {
+    const isCollapsed = content.classList.contains('collapsed');
+    if (isCollapsed) {
+      content.classList.remove('collapsed');
+      title.classList.add('expanded');
+    } else {
+      content.classList.add('collapsed');
+      title.classList.remove('expanded');
+    }
+  }
+}
+
 function applyFilters() {
   const searchQuery = document.getElementById("shopSearchInput").value.toLowerCase().trim();
   const maxPrice = parseInt(document.getElementById("priceRangeInput").value);

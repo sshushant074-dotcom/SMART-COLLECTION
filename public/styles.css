@@ -4502,3 +4502,40 @@ input[type="text"], input[type="tel"], input[type="email"], input[type="password
   }
 }
 
+/* ==========================================================================
+   Collapsible Filters Accordion
+   ========================================================================== */
+
+.collapsible-title {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  transition: color 0.2s ease !important;
+}
+
+.collapsible-title:hover {
+  color: var(--primary) !important;
+}
+
+.collapsible-title .toggle-icon {
+  font-size: 0.85rem !important;
+  transition: transform 0.25s ease !important;
+  color: var(--text-muted) !important;
+}
+
+.collapsible-title.expanded .toggle-icon {
+  transform: rotate(180deg) !important;
+  color: var(--primary) !important;
+}
+
+.collapsible-content {
+  transition: max-height 0.3s ease-out, opacity 0.3s ease-out !important;
+  overflow: hidden !important;
+}
+
+.collapsible-content.collapsed {
+  display: none !important;
+}
+

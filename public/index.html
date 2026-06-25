@@ -503,8 +503,10 @@
           </div>
 
           <div class="filter-group">
-            <h4 class="filter-title">Category</h4>
-            <div class="filter-buttons">
+            <h4 class="filter-title collapsible-title" id="filter-title-category" onclick="toggleFilterGroup('category')">
+              Category <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </h4>
+            <div class="filter-buttons collapsible-content collapsed" id="filter-content-category">
               <button class="filter-btn active" id="btn-cat-all" onclick="setCategoryFilter('all')">All</button>
               <button class="filter-btn" id="btn-cat-children" onclick="setCategoryFilter('children')">Children</button>
               <button class="filter-btn" id="btn-cat-girls" onclick="setCategoryFilter('girls')">Girls</button>
@@ -513,8 +515,10 @@
           </div>
 
           <div class="filter-group">
-            <h4 class="filter-title">Shop by Event</h4>
-            <div class="filter-buttons event-filter-buttons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+            <h4 class="filter-title collapsible-title" id="filter-title-event" onclick="toggleFilterGroup('event')">
+              Shop by Event <i class="fa-solid fa-chevron-down toggle-icon"></i>
+            </h4>
+            <div class="filter-buttons event-filter-buttons collapsible-content collapsed" id="filter-content-event" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
               <button class="filter-btn active" id="btn-event-all" onclick="setEventFilter('all')" style="font-size: 0.82rem; padding: 8px 4px; text-align: center; justify-content: center;">All Events</button>
               <button class="filter-btn" id="btn-event-birthday" onclick="setEventFilter('birthday')" style="font-size: 0.82rem; padding: 8px 4px; text-align: center; justify-content: center;">🎂 Birthday</button>
               <button class="filter-btn" id="btn-event-wedding" onclick="setEventFilter('wedding')" style="font-size: 0.82rem; padding: 8px 4px; text-align: center; justify-content: center;">💒 Wedding</button>
