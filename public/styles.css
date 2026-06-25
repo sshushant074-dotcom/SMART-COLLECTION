@@ -2655,43 +2655,83 @@ body:has(#cartDrawer.active) {
 /* Phone screen */
 @media (max-width: 768px) {
   .main-header {
-    height: 60px;
-    padding: 0;
+    height: auto;
+    padding: 10px 0;
   }
   .header-container {
-    height: 100%;
-    padding: 0 15px;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 15px;
+    align-items: stretch;
+  }
+  .logo-container {
+    margin-right: auto;
+  }
+  .header-actions {
+    display: flex;
     align-items: center;
-    flex-wrap: nowrap;
-    gap: 0;
+    gap: 8px;
   }
   .nav-links {
-    display: none !important;
+    display: flex !important;
+    overflow-x: auto;
+    width: 100%;
+    padding: 4px 0;
+    gap: 10px;
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+  .nav-links::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome/Safari */
+  }
+  .nav-link {
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    padding: 6px 12px;
+    border-radius: 50px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-muted) !important;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-link.active {
+    background: var(--primary);
+    color: #ffffff !important;
+    border-color: var(--primary);
   }
   .mobile-menu-btn {
-    display: flex;
+    display: none !important;
   }
   .header-search-bar {
     display: none !important;
   }
-  .logo-text h1 {
-    font-size: 1.1rem;
+  .install-app-btn {
+    padding: 0 !important;
+    width: 36px !important;
+    height: 36px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50% !important;
   }
-  .logo-text span {
-    font-size: 0.6rem;
-    letter-spacing: 1px;
-  }
-  .logo-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 1rem;
+  .install-app-btn span {
+    display: none;
   }
   .profile-trigger-btn {
-    padding: 0 8px !important;
-    height: 32px !important;
-    font-size: 0.75rem !important;
+    padding: 0 !important;
+    width: 36px !important;
+    height: 36px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50% !important;
   }
   .profile-trigger-btn span {
     display: none;
