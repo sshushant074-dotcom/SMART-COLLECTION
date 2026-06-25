@@ -1057,11 +1057,22 @@
               <div class="form-row" style="grid-template-columns: 1.2fr 0.8fr; gap: 15px; align-items: center;">
                 <div class="form-group">
                   <label style="font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; display: block;">Payment Mode *</label>
-                  <select id="offlineSalePaymentMethod" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
+                  <select id="offlineSalePaymentMethod" onchange="updateOfflineBillingSummary()" style="width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background-color: var(--bg-card); color: var(--text);">
                     <option value="CASH">Cash Payment</option>
                     <option value="UPI">UPI / QR Code</option>
                     <option value="CARD">Debit/Credit Card</option>
                   </select>
+                  <div id="offlineSaleUpiQrContainer" style="display: none; margin-top: 15px; text-align: center; background: rgba(46, 196, 182, 0.05); border: 1px dashed rgba(46, 196, 182, 0.3); padding: 15px; border-radius: var(--radius-sm);">
+                    <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; color: var(--text);">Scan QR to Pay via UPI</div>
+                    <div id="offlineSaleUpiQrImageWrapper" style="display: inline-block; padding: 10px; background: white; border-radius: 8px; margin-bottom: 8px; min-height: 150px; min-width: 150px; position: relative;">
+                       <img id="offlineSaleUpiQrImg" src="" style="width: 150px; height: 150px; display: none;">
+                       <div id="offlineSaleUpiQrSpinner" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--primary);"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
+                    </div>
+                    <div id="offlineSaleUpiDetails" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
+                      Amount: <span id="offlineSaleUpiAmount" style="color: var(--primary); font-weight: 700;">₹0</span><br>
+                      UPI ID: <span id="offlineSaleUpiId">sshushant074@oksbi</span>
+                    </div>
+                  </div>
                 </div>
                 <div style="text-align: right;">
                   <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Subtotal: <span id="offlineSubtotalDisplay">₹0</span></div>

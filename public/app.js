@@ -8005,6 +8005,10 @@ function initOfflineSalesTab() {
   const paymentMethod = document.getElementById("offlineSalePaymentMethod");
   if (paymentMethod) paymentMethod.value = "CASH";
   
+  currentOfflineQrAmount = null;
+  const qrContainer = document.getElementById("offlineSaleUpiQrContainer");
+  if (qrContainer) qrContainer.style.display = "none";
+  
   const historySearch = document.getElementById("offlineHistorySearch");
   if (historySearch) historySearch.value = "";
 
@@ -8219,6 +8223,62 @@ function updateOfflineBillingSummary() {
     discountDisplay.textContent = discountText;
   } else {
     discountRow.style.display = "none";
+  }
+
+  // Handle live UPI QR Code generation if UPI payment option is selected
+  const paymentMethod = document.getElementById("offlineSalePaymentMethod");
+  const isUpiSelected = paymentMethod && paymentMethod.value === "UPI";
+  if (isUpiSelected && finalTotal > 0) {
+    updateOfflineUpiQr(finalTotal);
+  } else {
+    const qrContainer = document.getElementById("offlineSaleUpiQrContainer");
+    if (qrContainer) qrContainer.style.display = "none";
+  }
+}
+
+let currentOfflineQrAmount = null;
+
+async function updateOfflineUpiQr(amount) {
+  const container = document.getElementById("offlineSaleUpiQrContainer");
+  const img = document.getElementById("offlineSaleUpiQrImg");
+  const spinner = document.getElementById("offlineSaleUpiQrSpinner");
+  const amountDisplay = document.getElementById("offlineSaleUpiAmount");
+  const upiIdDisplay = document.getElementById("offlineSaleUpiId");
+  
+  if (!container || amount <= 0) {
+    if (container) container.style.display = "none";
+    return;
+  }
+  
+  container.style.display = "block";
+  if (amountDisplay) amountDisplay.textContent = `₹${amount}`;
+  
+  if (currentOfflineQrAmount === amount) {
+    return; // Already fetched
+  }
+  
+  if (img) img.style.display = "none";
+  if (spinner) {
+    spinner.style.display = "block";
+    spinner.innerHTML = '<i class="fa-solid fa-spinner fa-spin fa-2x"></i>';
+  }
+  currentOfflineQrAmount = amount;
+  
+  try {
+    const data = await fetchFromApi(`/api/qr/upi?amount=${amount}`);
+    if (data && data.success) {
+      if (img) {
+        img.src = data.qr;
+        img.style.display = "inline-block";
+      }
+      if (spinner) spinner.style.display = "none";
+      if (upiIdDisplay) upiIdDisplay.textContent = data.upiId || "sshushant074@oksbi";
+    } else {
+      throw new Error(data ? data.error : "Failed to load QR");
+    }
+  } catch (err) {
+    console.error("Error loading offline UPI QR code:", err);
+    if (spinner) spinner.innerHTML = '<span style="color: #e71d36; font-size: 0.75rem;">Failed to load QR</span>';
   }
 }
 
