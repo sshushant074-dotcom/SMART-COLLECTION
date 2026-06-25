@@ -2777,10 +2777,70 @@ body:has(#cartDrawer.active) {
     grid-template-columns: 1fr;
   }
   .admin-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    padding: 0 10px !important;
   }
+  .admin-stats .stat-card {
+    padding: 12px 10px !important;
+    gap: 10px !important;
+    border-radius: 10px !important;
+  }
+  .admin-stats .stat-card i {
+    font-size: 1.4rem !important;
+  }
+  .admin-stats .stat-card h4 {
+    font-size: 1.1rem !important;
+  }
+  .admin-stats .stat-card p {
+    font-size: 0.72rem !important;
+  }
+  
   .admin-analytics-stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .admin-analytics-stats-grid .stat-card {
+    padding: 12px 10px !important;
+  }
+  .admin-analytics-stats-grid .stat-card h2 {
+    font-size: 1.2rem !important;
+  }
+  .admin-analytics-stats-grid .stat-card p {
+    font-size: 0.7rem !important;
+    margin-bottom: 4px !important;
+  }
+  .admin-analytics-panel {
+    padding: 0 10px !important;
+    margin: 15px auto !important;
+  }
+  .admin-form-panel, .admin-list-panel, .admin-log-panel {
+    padding: 15px !important;
+  }
+  .admin-log-panel .filter-buttons {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    gap: 8px !important;
+  }
+  #adminTopSellingList > div {
+    gap: 8px !important;
+    padding: 8px !important;
+  }
+  #adminTopSellingList img {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  #adminTopSellingList h4 {
+    font-size: 0.82rem !important;
+  }
+  #adminTopSellingList span {
+    font-size: 0.7rem !important;
+  }
+  #adminTopSellingList div[style*="min-width: 60px"] {
+    min-width: 55px !important;
+  }
+  #adminTopSellingList span[style*="font-size: 0.95rem"] {
+    font-size: 0.8rem !important;
   }
   .cart-drawer {
     width: 100%;
